@@ -82,7 +82,9 @@ loss_ceiling:               {enabled: true, from_year: 2038, max_losses_divided_
   хранилище на старте.
 
 Лишние поля не ломают план (`additionalProperties: true` у организаторов),
-но ядро их не читает.
+но ядро их не читает. `scenario_id` в плане — сценарий по умолчанию; при
+расчёте его можно переопределить (`--scenario` в CLI, поле запроса в API).
+Для `LUNAR_ISRU` вместо `financing_years` можно написать `"year": 2037`.
 
 ## Выход. Результат расчёта
 
@@ -144,16 +146,41 @@ loss_ceiling:               {enabled: true, from_year: 2038, max_losses_divided_
 
 - `feasible` — `false`, если есть хоть одна непройденная проверка с
   `severity: hard`. Такой план интерфейс показывает как неисполнимый.
-- `yearly_balance` — главная таблица экрана оператора, строка на год.
+  Требования BASE к сервису в других сценариях идут со `severity: info`:
+  видны, но план не «ломают».
+- `yearly_balance` — главная таблица экрана оператора, строка на год. Кроме
+  показанного выше есть `loss_share`, `reserve_note` (почему резерв
+  засчитан или нет), `storage_id`, `max_stock_t`, `overflow_t`,
+  `emergency_base_channel`, `emergency_streak_years`.
 - `source_schedule` — строка на каждую пару год × канал, отсюда контрактная
-  картина и платежи.
-- `inventory_trace` — движение бака, отсюда график запаса.
-- `financial_breakdown` — деньги по годам, отсюда бюджет; `totals` — итоги
-  за горизонт.
+  картина и платежи. Дополнительно: `available_months`, `available_from`
+  (месяц `2038-03` или причина недоступности), `capacity_available_t`,
+  `delivery_share`, `lead_time`, `order_by` (когда заказ должен быть
+  размещён), `reliability` (для реестра рисков, на поставку не влияет).
+- `inventory_trace` — движение бака по годам, отсюда график запаса;
+  `monthly_trace` — то же по месяцам (72 строки), для графика и
+  проверки переполнения.
+- `financial_breakdown` — деньги по годам, отсюда бюджет; есть ещё
+  `take_or_pay_topup_mln` и `initial_stock_mln`. `totals` — итоги за
+  горизонт: `total_cost_mln`, `pv_total_mln`, `capex_total_mln`,
+  `served_total_t`, `shortage_total_t`, `cost_per_served_t_mln`,
+  `min_service_level_total/critical` и составляющие расходов.
 - `constraint_checks` — все проверки, и пройденные тоже (`ok: true`); у
   нарушений всегда год, факт, порог, превышение и причина словами.
+  Правила из `data/constraints.csv`: `BASE_CRITICAL_SERVICE`,
+  `BASE_TOTAL_SERVICE`, `CAPEX_2037`, `CAPEX_2040`, `RESERVE_45D`,
+  `EMERGENCY_BASE_STREAK`, `STRESS_LOSS_LIMIT` (только где сценарий задаёт
+  потолок потерь). Технические, только при нарушении:
+  `CAPACITY_EXCEEDED` (бронь или заказ больше мощности),
+  `ORDER_EXCEEDS_RESERVATION`, `SOURCE_UNAVAILABLE`, `STORAGE_CAPACITY`,
+  `ISRU_FINANCING`, `INVESTMENT_NOT_AVAILABLE`. Список отсортирован:
+  нарушения первыми.
 - `risk_register` — заполняется аналитиками из `configs/risks.json`, ядро
   прикладывает как есть.
+- `warnings` — заметки, не нарушения (канал доступен часть года, бронь у
+  недоступного канала, ввод за горизонтом).
+- `meta` — версия ядра, хэш данных, сценарий, допущения и сам план: по
+  результату можно восстановить, из чего он посчитан.
 
 Выгрузка CSV — те же таблицы, развёрнутые в длинный формат
 `scenario_id, plan_id, year, entity, metric, value, unit`; XLSX — по листу

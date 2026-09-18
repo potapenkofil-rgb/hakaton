@@ -1,0 +1,14 @@
+[project]
+name = "fuelhub"
+version = "0.1.0"
+description = "Расчётное ядро топливного узла 2035–2040, КосмоХакатон 2026, кейс 2"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
