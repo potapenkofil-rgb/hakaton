@@ -142,6 +142,10 @@ def main(argv=None) -> int:
     sub.add_parser("scenarios", help="список сценариев")
     sub.add_parser("inputs", help="данные кейса в JSON")
 
+    p = sub.add_parser("serve", help="запустить веб-интерфейс")
+    p.add_argument("--host", default="127.0.0.1")
+    p.add_argument("--port", type=int, default=8765)
+
     args = ap.parse_args(argv)
     try:
         ctx = Context(args.data, args.scenarios, args.assumptions)
@@ -149,6 +153,10 @@ def main(argv=None) -> int:
         print(f"ошибка загрузки данных: {e}", file=sys.stderr)
         return 2
 
+    if args.cmd == "serve":
+        from .server import serve
+        serve(args.host, args.port, ctx)
+        return 0
     if args.cmd == "scenarios":
         for s in ctx.scenarios.values():
             print(f"{s.id:18} {s.status:16} {s.label}  ({s.path})")
