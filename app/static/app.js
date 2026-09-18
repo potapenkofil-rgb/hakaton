@@ -21,9 +21,15 @@ function showError(err) {
   let text = err.error === "INVALID_PLAN"
     ? "План не принят:\n" + err.details.map((d) => `• ${d.path}: ${d.message}`).join("\n")
     : (err.message || err.error || String(err));
-  box.textContent = text;
+  box.textContent = text + "\n\nИсправь поле, о котором написано выше, или нажми «Сброс» — вернётся план base-v1.";
   box.classList.remove("hidden");
-  setStatus("Ошибка ввода — расчёта нет", "bad");
+  setStatus("Ошибка ввода — расчёта нет. Что не так — написано в красном поле ниже; кнопка «Сброс» вернёт base-v1", "bad");
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+async function reset() {
+  $("plan-list").value = "base-v1";
+  await open();
 }
 
 function setStatus(text, cls) {
@@ -221,6 +227,7 @@ async function init() {
   $("btn-open").onclick = open;
   $("btn-csv").onclick = () => exportFile("csv");
   $("btn-xlsx").onclick = () => exportFile("xlsx");
+  $("btn-reset").onclick = reset;
   try {
     state.inputs = await api("/api/inputs");
   } catch (e) { showError(e); return; }
