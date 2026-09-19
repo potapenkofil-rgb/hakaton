@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400">
+  <rect width="640" height="400" fill="#ffffff"/>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#1f5fbf"/>
+    </marker>
+  </defs>
+  <g transform="translate(160 200)">
+    <circle cx="0" cy="0" r="100" fill="none" stroke="#1f5fbf" stroke-width="6" stroke-dasharray="470 160" stroke-linecap="round" marker-end="url(#arr)" transform="rotate(-100)"/>
+    <circle cx="0" cy="-100" r="16" fill="#f2a93b" stroke="#ffffff" stroke-width="4"/>
+    <circle cx="87" cy="50" r="16" fill="#1f2a44" stroke="#ffffff" stroke-width="4"/>
+    <circle cx="-87" cy="50" r="16" fill="#1f2a44" stroke="#ffffff" stroke-width="4"/>
+    <rect x="-30" y="-34" width="60" height="68" rx="14" fill="#f2a93b"/>
+    <rect x="-18" y="-46" width="36" height="14" rx="5" fill="#f2a93b"/>
+    <line x1="-14" y1="-12" x2="14" y2="-12" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+    <line x1="-14" y1="2" x2="14" y2="2" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+    <line x1="-14" y1="16" x2="4" y2="16" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <text x="320" y="170" font-family="Segoe UI, Arial, sans-serif" font-size="44" font-weight="700" fill="#1f2a44">Космоконтур</text>
+  <text x="320" y="212" font-family="Segoe UI, Arial, sans-serif" font-size="22" fill="#1f5fbf" letter-spacing="6">ТОПЛИВНЫЙ УЗЕЛ 2035</text>
+  <text x="320" y="252" font-family="Segoe UI, Arial, sans-serif" font-size="16" fill="#6b7280">2. Замкнутый контур: источники → бак → потребители</text>
+</svg>

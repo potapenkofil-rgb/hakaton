@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400">
+  <rect width="640" height="400" fill="#0f1b33"/>
+  <g transform="translate(160 200)">
+    <line x1="-95" y1="60" x2="0" y2="-70" stroke="#4fc3f7" stroke-width="4" stroke-dasharray="10 8"/>
+    <line x1="95" y1="60" x2="0" y2="-70" stroke="#4fc3f7" stroke-width="4" stroke-dasharray="10 8"/>
+    <line x1="-95" y1="60" x2="95" y2="60" stroke="#33415c" stroke-width="3"/>
+    <circle cx="-95" cy="60" r="34" fill="#1f5fbf"/>
+    <path d="M-115,52 C-108,40 -92,42 -84,50 C-78,58 -90,70 -100,66 C-108,63 -114,60 -115,52 Z" fill="#3fbf7f"/>
+    <circle cx="95" cy="60" r="26" fill="#c9ced6"/>
+    <circle cx="86" cy="52" r="5" fill="#9aa3b2"/><circle cx="104" cy="66" r="7" fill="#9aa3b2"/><circle cx="98" cy="46" r="3" fill="#9aa3b2"/>
+    <g transform="translate(0 -70)">
+      <rect x="-26" y="-30" width="52" height="60" rx="12" fill="#f2a93b"/>
+      <rect x="-14" y="-40" width="28" height="12" rx="4" fill="#f2a93b"/>
+      <line x1="-12" y1="-10" x2="12" y2="-10" stroke="#0f1b33" stroke-width="4" stroke-linecap="round"/>
+      <line x1="-12" y1="2" x2="12" y2="2" stroke="#0f1b33" stroke-width="4" stroke-linecap="round"/>
+      <line x1="-12" y1="14" x2="2" y2="14" stroke="#0f1b33" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <text x="-95" y="112" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#9fb0c8">Земля</text>
+    <text x="95" y="112" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#9fb0c8">Луна</text>
+    <text x="0" y="-122" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#9fb0c8">узел</text>
+  </g>
+  <text x="320" y="170" font-family="Segoe UI, Arial, sans-serif" font-size="44" font-weight="700" fill="#ffffff">Космоконтур</text>
+  <text x="320" y="212" font-family="Segoe UI, Arial, sans-serif" font-size="22" fill="#4fc3f7" letter-spacing="6">ЗЕМЛЯ · УЗЕЛ · ЛУНА</text>
+  <text x="320" y="252" font-family="Segoe UI, Arial, sans-serif" font-size="16" fill="#9fb0c8">4. Три вершины: откуда, где, куда</text>
+</svg>
