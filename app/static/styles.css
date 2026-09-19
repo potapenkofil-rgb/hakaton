@@ -20,6 +20,9 @@ h2 { font-size: 15px; margin: 0 0 8px; }
 .hint { color: var(--muted); font-weight: normal; font-size: 12px; }
 .bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
 .bar label { display: inline-flex; gap: 6px; align-items: center; }
+.bar.upload { background: #eef2f8; border: 1px dashed #9db3d6; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; }
+.bar.upload label.file { font-weight: 600; }
+input[type=file] { max-width: 260px; }
 input, select, button { font: inherit; }
 input[type=text], input[type=number], input:not([type]), select { padding: 4px 6px; border: 1px solid #c9ced6; border-radius: 4px; background: #fff; }
 input[type=number] { width: 84px; }

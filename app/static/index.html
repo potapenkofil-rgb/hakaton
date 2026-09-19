@@ -9,10 +9,15 @@
 <body>
 <header>
   <h1>Топливный узел 2035–2040</h1>
+  <div class="bar upload">
+    <label class="file">Загрузить файл плана (JSON) <input type="file" id="plan-file" accept=".json,application/json"></label>
+    <label>Сценарий <select id="scenario"></select></label>
+    <button id="btn-calc" class="primary">Посчитать</button>
+    <span class="hint">примеры файлов — в папке results/plans</span>
+  </div>
   <div class="bar">
     <label>План <input id="plan-id" value="base-v1"></label>
-    <label>Сценарий <select id="scenario"></select></label>
-    <button id="btn-calc" class="primary">Пересчитать</button>
+    <button id="btn-download">Скачать план</button>
     <button id="btn-compare">Сравнить BASE / STRESS</button>
     <button id="btn-save">Сохранить</button>
     <label>Открыть <select id="plan-list"></select></label>

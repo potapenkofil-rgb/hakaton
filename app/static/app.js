@@ -32,6 +32,34 @@ async function reset() {
   await open();
 }
 
+async function loadFile(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  let plan;
+  try {
+    plan = JSON.parse(await file.text());
+  } catch (e) {
+    showError({ message: `Файл ${file.name} не является JSON: ${e.message}` });
+    return;
+  }
+  if (!plan || typeof plan !== "object" || !plan.decisions) {
+    showError({ message: `В файле ${file.name} нет поля decisions — это не план (см. docs/CONTRACT.md)` });
+    return;
+  }
+  fillForm(plan);
+  setStatus(`Загружен файл ${file.name}, считаю…`, "wait");
+  ev.target.value = "";
+  await calc();
+}
+
+function downloadPlan() {
+  const plan = readPlan();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(plan, null, 2)], { type: "application/json" }));
+  a.download = `${plan.plan_id || "plan"}.json`;
+  a.click();
+}
+
 function setStatus(text, cls) {
   const s = $("status");
   s.textContent = text;
@@ -228,6 +256,8 @@ async function init() {
   $("btn-csv").onclick = () => exportFile("csv");
   $("btn-xlsx").onclick = () => exportFile("xlsx");
   $("btn-reset").onclick = reset;
+  $("btn-download").onclick = downloadPlan;
+  $("plan-file").addEventListener("change", loadFile);
   try {
     state.inputs = await api("/api/inputs");
   } catch (e) { showError(e); return; }
