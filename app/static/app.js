@@ -168,12 +168,38 @@ function chartDemand(res) {
     const bars = [[r.demand_total_t, "#d5d9e0"], [r.delivered_actual_t, "#9cc0ee"], [r.served_total_t, "#1f5fbf"]];
     bars.forEach(([v, c], j) => {
       const bx = cx + (j - 1.5) * bw;
-      s += `<rect x="${bx.toFixed(1)}" y="${y(v).toFixed(1)}" width="${(bw - 2).toFixed(1)}" height="${(y(0) - y(v)).toFixed(1)}" rx="2" fill="${c}"><title>${r.year}: спрос ${num(r.demand_total_t)} т, приехало ${num(r.delivered_actual_t)} т, выдано ${num(r.served_total_t)} т, дефицит ${num(r.shortage_total_t)} т</title></rect>`;
+      s += `<rect x="${bx.toFixed(1)}" y="${y(v).toFixed(1)}" width="${(bw - 2).toFixed(1)}" height="${(y(0) - y(v)).toFixed(1)}" rx="2" fill="${c}"/>`;
     });
     if (r.shortage_total_t > 0) s += `<text x="${cx}" y="${y(r.demand_total_t) - 6}" text-anchor="middle" font-size="12" fill="#b3261e">−${num(r.shortage_total_t)}</text>`;
     s += `<text x="${cx}" y="${H - 10}" text-anchor="middle" font-size="12" fill="#6f7681">${r.year}</text>`;
   });
+  s += `<g class="hover" style="display:none"><rect height="22" rx="4" fill="#16181d"/><text font-size="12" fill="#fff"></text></g>`;
   $("chart-demand").innerHTML = s + "</svg>";
+  hoverDemand(rows, { W, H, L, R, T, slot, y });
+}
+
+function hoverDemand(rows, g) {
+  const svg = $("chart-demand").querySelector("svg");
+  const box = svg.querySelector(".hover");
+  const [bg, text] = box.children;
+  svg.addEventListener("mousemove", (e) => {
+    const r = svg.getBoundingClientRect();
+    if (!r.width) return;
+    const px = ((e.clientX - r.left) / r.width) * g.W;
+    const k = Math.max(0, Math.min(rows.length - 1, Math.floor((px - g.L) / g.slot)));
+    const row = rows[k];
+    let label = `${row.year} · спрос ${num(row.demand_total_t)} · приехало ${num(row.delivered_actual_t)} · выдано ${num(row.served_total_t)} т`;
+    if (row.shortage_total_t > 0) label += ` · дефицит ${num(row.shortage_total_t)} т`;
+    text.textContent = label;
+    const tw = text.getComputedTextLength() + 16;
+    const cx = g.L + g.slot * (k + 0.5);
+    const bx = Math.max(g.L, Math.min(g.W - g.R - tw, cx - tw / 2));
+    const by = Math.max(g.T, g.y(Math.max(row.demand_total_t, row.delivered_actual_t, row.served_total_t)) - 30);
+    bg.setAttribute("x", bx); bg.setAttribute("y", by); bg.setAttribute("width", tw);
+    text.setAttribute("x", bx + 8); text.setAttribute("y", by + 15);
+    box.style.display = "";
+  });
+  svg.addEventListener("mouseleave", () => { box.style.display = "none"; });
 }
 
 function renderSummary(res) {
