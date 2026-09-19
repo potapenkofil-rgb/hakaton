@@ -224,7 +224,6 @@ function render(res) {
   chartStock(res);
   chartDemand(res);
   renderTables(res);
-  $("engine").textContent = res.meta.engine_version;
 }
 
 function grid(el, kind, sources, years) {
