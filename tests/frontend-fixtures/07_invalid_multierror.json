@@ -1,0 +1,82 @@
+{
+  "plan_id": "test-07-invalid-multierror",
+  "scenario_id": "BASE",
+  "label": "Намеренно невалидный: parser/validation stress-test",
+  "decisions": {
+    "supply_orders": [
+      {
+        "source_id": "A",
+        "year": 2035,
+        "ordered_t": 50
+      },
+      {
+        "source_id": "A",
+        "year": 2035,
+        "ordered_t": 60
+      },
+      {
+        "source_id": "F",
+        "year": 2036,
+        "ordered_t": 20
+      },
+      {
+        "source_id": "B",
+        "year": 2041,
+        "ordered_t": 10
+      },
+      {
+        "source_id": "B",
+        "year": 2037,
+        "ordered_t": -5
+      }
+    ],
+    "capacity_reservations": [
+      {
+        "source_id": "A",
+        "year": 2035,
+        "reserved_capacity_t": 100
+      },
+      {
+        "source_id": "A",
+        "year": 2035,
+        "reserved_capacity_t": 90
+      },
+      {
+        "source_id": "Q",
+        "year": 2036,
+        "reserved_capacity_t": 10
+      },
+      {
+        "source_id": "B",
+        "year": 2037,
+        "reserved_capacity_t": -1
+      }
+    ],
+    "investments": [
+      {
+        "investment_id": "EARTH_NEW",
+        "option_year": 2037,
+        "exercise_year": 2035
+      },
+      {
+        "investment_id": "EARTH_NEW",
+        "option_year": 2035,
+        "exercise_year": 2036
+      },
+      {
+        "investment_id": "LUNAR_ISRU",
+        "financing_years": []
+      },
+      {
+        "investment_id": "UNKNOWN_INVESTMENT",
+        "year": 2037
+      }
+    ],
+    "inventory_policy": {
+      "initial_stock_t": -10,
+      "initial_stock_source_id": "F",
+      "initial_stock_cost_mln": -25,
+      "storage_id": "UNKNOWN_STORAGE"
+    }
+  }
+}

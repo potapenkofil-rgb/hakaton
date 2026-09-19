@@ -1,0 +1,88 @@
+{
+  "assumptions": [
+    {
+      "name": "discount_rate",
+      "value": 0.08,
+      "unit": "доля в год",
+      "source": "TEAM_ASSUMPTION: реальная ставка для инфраструктурных проектов; одна для всех альтернатив (docs/organizer/CALCULATION_RULES.md §9)",
+      "scope": "financial_breakdown.pv_mln, totals.pv_total_mln"
+    },
+    {
+      "name": "discount_base_year",
+      "value": 2035,
+      "unit": "год",
+      "source": "TEAM_ASSUMPTION: приведение к началу горизонта, цены постоянные 2035 года (data/README.md)",
+      "scope": "financial_breakdown.discount_factor"
+    },
+    {
+      "name": "earth_new_commissioning_months",
+      "value": 24,
+      "unit": "месяцев после 1 января года исполнения опциона",
+      "source": "CASE_INPUT даёт 18–24 мес; взята верхняя граница как консервативная (data/investment_options.csv)",
+      "scope": "доступность канала C Earth-New"
+    },
+    {
+      "name": "isru_lead_months",
+      "value": 2,
+      "unit": "месяцев после ввода",
+      "source": "CASE_INPUT даёт 1–2 мес после ввода; взята верхняя граница (data/supply_sources.csv)",
+      "scope": "первый месяц поставок канала D Lunar-ISRU"
+    },
+    {
+      "name": "zbo_commissioning",
+      "value": "same_year",
+      "unit": "",
+      "source": "TEAM_ASSUMPTION: модернизация действует с 1 января года оплаты; опция доступна с 2036 (data/storage_options.csv)",
+      "scope": "ёмкость и потери хранилища"
+    },
+    {
+      "name": "emergency_wait_days",
+      "value": 42,
+      "unit": "дней",
+      "source": "CASE_INPUT: lead time Emergency 6 недель = 42 дня (data/supply_sources.csv)",
+      "scope": "зачёт брони Emergency в 45-дневный резерв: физический запас должен покрывать эти дни"
+    },
+    {
+      "name": "emergency_base_rule",
+      "value": "largest_share",
+      "unit": "",
+      "source": "TEAM_ASSUMPTION: Emergency считается основным каналом года, если его фактическая поставка не меньше поставки любого другого канала",
+      "scope": "EMERGENCY_BASE_STREAK"
+    },
+    {
+      "name": "intra_year_profile",
+      "value": "uniform",
+      "unit": "",
+      "source": "TEAM_ASSUMPTION: спрос и поставки распределены равномерно по 12 месяцам; внутренний шаг модели — месяц (CALCULATION_RULES.md §10)",
+      "scope": "monthly_trace, потери, хранение, переполнение"
+    },
+    {
+      "name": "weeks_per_month",
+      "value": 4.3333,
+      "unit": "недель",
+      "source": "TEAM_ASSUMPTION: 52 недели / 12 месяцев для перевода срока Emergency в месяцы",
+      "scope": "source_schedule.order_by"
+    },
+    {
+      "name": "variable_payment_basis",
+      "value": "actual_delivery",
+      "unit": "",
+      "source": "TEAM_ASSUMPTION: переменная плата начисляется на фактически поступивший объём, минимум take-or-pay — на бронь (CALCULATION_RULES.md §5)",
+      "scope": "source_schedule.payable_volume_t"
+    },
+    {
+      "name": "holding_cost_basis",
+      "value": "monthly_average",
+      "unit": "",
+      "source": "CALCULATION_RULES.md §8: средний физический запас с учётом времени; считается как среднее начала и конца каждого месяца × 0,72 / 12",
+      "scope": "financial_breakdown.holding_mln"
+    },
+    {
+      "name": "initial_stock_pricing",
+      "value": "source_price",
+      "unit": "",
+      "source": "TEAM_ASSUMPTION: стартовый запас закуплен до горизонта по цене указанного канала, оплата в 2035, в CAPEX не входит",
+      "scope": "financial_breakdown.initial_stock_mln"
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+constraint_id,metric,operator,value,unit,period,scenario,severity,status,description
+BASE_TOTAL_SERVICE,total_service_level,>=,0.97,share,annual,BASE,hard,SYNTHETIC,

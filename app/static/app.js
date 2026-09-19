@@ -1,63 +1,25 @@
 const $ = (id) => document.getElementById(id);
-const state = { inputs: null, result: null, timer: null };
+const state = { inputs: null, plan: null, result: null, comparison: null, phase: "LOADING", step: 1, revision: 0, validatedRevision: -1, request: 0, source: "", rawMode: false, validation: null };
 
-const fmt = (v, d = 1) => (v === null || v === undefined || v === "" ? "" : typeof v === "number" ? v.toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d }) : v);
-const pct = (v) => (typeof v === "number" ? (v * 100).toFixed(1) + " %" : "");
+const fmt = (v, d = 1) => (v === null || v === undefined || v === "" ? "—" : typeof v === "number" ? v.toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d }) : v);
+const pct = (v) => (typeof v === "number" ? fmt(v * 100) + " %" : "");
 
 async function api(path, body, raw = false) {
-  const res = await fetch(path, body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  let res;
+  try { res = await fetch(path, body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); }
+  catch { throw {message: "Нет связи с сервером. Проверьте, запущен ли сервер, и повторите действие."}; }
   if (raw) {
-    if (!res.ok) throw await res.json();
+    if (!res.ok) {
+      let error;
+      try { error = await res.json(); } catch { error = {message: `Не удалось подготовить файл. Повторите попытку позже.`}; }
+      throw error;
+    }
     return res;
   }
-  const data = await res.json();
+  let data;
+  try { data = await res.json(); } catch { throw {message: `Не удалось выполнить действие на сервере. Повторите попытку позже.`}; }
   if (!res.ok) throw data;
   return data;
-}
-
-function showError(err) {
-  const box = $("error");
-  if (!err) { box.classList.add("hidden"); box.textContent = ""; return; }
-  let text = err.error === "INVALID_PLAN"
-    ? "План не принят:\n" + err.details.map((d) => `• ${d.path}: ${d.message}`).join("\n")
-    : (err.message || err.error || String(err));
-  box.textContent = text + "\n\nИсправь поле, о котором написано выше, или нажми «Сброс» — вернётся план base-v1.";
-  box.classList.remove("hidden");
-  setStatus("Ошибка ввода — расчёта нет. Что не так — написано в красном поле ниже; кнопка «Сброс» вернёт base-v1", "bad");
-  box.scrollIntoView({ behavior: "smooth", block: "center" });
-}
-
-async function reset() {
-  $("plan-list").value = "base-v1";
-  await open();
-}
-
-async function loadFile(ev) {
-  const file = ev.target.files[0];
-  if (!file) return;
-  let plan;
-  try {
-    plan = JSON.parse(await file.text());
-  } catch (e) {
-    showError({ message: `Файл ${file.name} не является JSON: ${e.message}` });
-    return;
-  }
-  if (!plan || typeof plan !== "object" || !plan.decisions) {
-    showError({ message: `В файле ${file.name} нет поля decisions — это не план (см. docs/CONTRACT.md)` });
-    return;
-  }
-  fillForm(plan);
-  setStatus(`Загружен файл ${file.name}, считаю…`, "wait");
-  ev.target.value = "";
-  await calc();
-}
-
-function downloadPlan() {
-  const plan = readPlan();
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(plan, null, 2)], { type: "application/json" }));
-  a.download = `${plan.plan_id || "plan"}.json`;
-  a.click();
 }
 
 function setStatus(text, cls) {
@@ -68,7 +30,7 @@ function setStatus(text, cls) {
 
 function table(el, header, rows, rowClass) {
   const th = header.map((h) => `<th>${h}</th>`).join("");
-  const body = rows.map((r, i) => `<tr class="${rowClass ? rowClass(r, i) : ""}">${r.map((c) => `<td class="${typeof c === "string" && c.length > 12 ? "txt" : ""}">${c ?? ""}</td>`).join("")}</tr>`).join("");
+  const body = rows.map((r, i) => `<tr class="${rowClass ? rowClass(r, i) : ""}">${r.map((c) => `<td class="${typeof c === "string" && c.length > 12 ? "txt" : ""}">${esc(c ?? "")}</td>`).join("")}</tr>`).join("");
   el.innerHTML = `<thead><tr>${th}</tr></thead><tbody>${body}</tbody>`;
 }
 
@@ -88,23 +50,26 @@ function buildEditor() {
   yearOptions($("en-exercise"), years, 2036);
   yearOptions($("zbo-year"), years, 2037);
   $("isru-years").innerHTML = years.map((y) => `<label><input type="checkbox" class="isru-year" value="${y}"> ${y}</label>`).join(" ");
+  $("init-storage").innerHTML = state.inputs.storages.map(s => `<option value="${esc(s.id)}">${esc(s.id)}</option>`).join("");
   $("init-source").innerHTML = sources.map((s) => `<option value="${s.id}">${s.id} ${s.name} (${s.price} млн/т)</option>`).join("");
-  $("scenario").innerHTML = state.inputs.scenarios.map((s) => `<option value="${s.scenario_id}">${s.scenario_id} — ${s.label}</option>`).join("");
+  $("scenario").innerHTML = state.inputs.scenarios.map((s) => `<option value="${s.scenario_id}">${esc(scenarioLabel(s.scenario_id))}</option>`).join("");
   $("editor").addEventListener("input", scheduleCalc);
   document.querySelectorAll("fieldset input, fieldset select").forEach((el) => el.addEventListener("change", scheduleCalc));
-  $("scenario").addEventListener("change", calc);
+  $("scenario").addEventListener("change", scheduleCalc);
 }
 
 function renderSources() {
   const rows = state.inputs.sources.map((s) => [
     s.id + " " + s.name, s.capacity, s.price, s.reservation_rate, pct(s.top_share),
-    s.lead_time_min === s.lead_time_max ? `${s.lead_time_max} ${s.lead_time_unit}` : `${s.lead_time_min}–${s.lead_time_max} ${s.lead_time_unit}`,
-    s.available_from ?? "после инвестиции", s.reliability, s.notes,
+    s.lead_time_min === s.lead_time_max ? `${s.lead_time_max} ${["month","months"].includes(s.lead_time_unit) ? "мес." : ["day","days"].includes(s.lead_time_unit) ? "дн." : ["week","weeks"].includes(s.lead_time_unit) ? "нед." : s.lead_time_unit}` : `${s.lead_time_min}–${s.lead_time_max} ${["month","months"].includes(s.lead_time_unit) ? "мес." : ["day","days"].includes(s.lead_time_unit) ? "дн." : ["week","weeks"].includes(s.lead_time_unit) ? "нед." : s.lead_time_unit}`,
+    s.available_from ?? "после инвестиции",
+    String(s.reliability).replace(/constant:/g,"Постоянная: ").replace(/first_operating_year:/g,"Первый год: ").replace(/later:/g,"Далее: "),
+    ({"long-term Earth-to-orbit channel":"Долгосрочные поставки с Земли","flexible Earth-to-orbit channel":"Гибкие поставки с Земли","capacity available only after option exercise and preparation":"Доступен после исполнения опциона и подготовки","available after required CAPEX financing and commissioning":"Доступен после полного финансирования и ввода","authoritative organizer lead time is six weeks":"Срок поставки по условиям задачи — шесть недель"})[s.notes] || s.notes,
   ]);
-  table($("sources"), ["Канал", "Мощность, т/год", "Цена, млн/т", "Бронь, млн за т/год", "Take-or-pay", "Срок заказа", "Доступен с", "Надёжность", ""], rows);
+  table($("sources"), ["Канал", "Мощность, т/год", "Цена, млн/т", "Бронь, млн за т/год", "Мин. оплачиваемая доля", "Срок заказа", "Доступен с", "Надёжность", "Описание"], rows);
 }
 
-function readPlan() {
+function readForm() {
   const orders = [], reservations = [];
   document.querySelectorAll("#editor input").forEach((el) => {
     if (el.value === "") return;
@@ -117,7 +82,8 @@ function readPlan() {
   if ($("isru-on").checked) investments.push({ investment_id: "LUNAR_ISRU", financing_years: [...document.querySelectorAll(".isru-year:checked")].map((e) => Number(e.value)) });
   if ($("zbo-on").checked) investments.push({ investment_id: "ZBO", year: Number($("zbo-year").value) });
   return {
-    plan_id: $("plan-id").value,
+    plan_id: state.plan?.plan_id || `scenario-${Date.now()}`,
+    label: $("plan-id").value.trim(),
     scenario_id: $("scenario").value,
     decisions: {
       supply_orders: orders,
@@ -127,19 +93,19 @@ function readPlan() {
         initial_stock_t: Number($("init-stock").value || 0),
         initial_stock_cost_mln: Number($("init-cost").value || 0),
         initial_stock_source_id: $("init-source").value,
-        storage_id: "BASE",
+        storage_id: $("init-storage").value,
       },
     },
   };
 }
 
 function fillForm(plan) {
-  $("plan-id").value = plan.plan_id || "";
+  $("plan-id").value = plan.label || plan.plan_id || "";
   if (plan.scenario_id && [...$("scenario").options].some((o) => o.value === plan.scenario_id)) $("scenario").value = plan.scenario_id;
   document.querySelectorAll("#editor input").forEach((el) => (el.value = ""));
   const d = plan.decisions || {};
-  (d.supply_orders || []).forEach((o) => { const el = document.querySelector(`#editor input[data-kind=order][data-src="${o.source_id}"][data-year="${o.year}"]`); if (el) el.value = o.ordered_t; });
-  (d.capacity_reservations || []).forEach((r) => { const el = document.querySelector(`#editor input[data-kind=res][data-src="${r.source_id}"][data-year="${r.year}"]`); if (el) el.value = r.reserved_capacity_t; });
+  (d.supply_orders || []).forEach((o) => { const el = document.querySelector(`#editor input[data-kind=order][data-src="${CSS.escape(o.source_id)}"][data-year="${o.year}"]`); if (el) el.value = o.ordered_t; });
+  (d.capacity_reservations || []).forEach((r) => { const el = document.querySelector(`#editor input[data-kind=res][data-src="${CSS.escape(r.source_id)}"][data-year="${r.year}"]`); if (el) el.value = r.reserved_capacity_t; });
   const inv = Object.fromEntries((d.investments || []).map((i) => [i.investment_id, i]));
   $("en-on").checked = !!inv.EARTH_NEW;
   if (inv.EARTH_NEW) { $("en-option").value = inv.EARTH_NEW.option_year; $("en-exercise").value = inv.EARTH_NEW.exercise_year; }
@@ -149,122 +115,39 @@ function fillForm(plan) {
   $("zbo-on").checked = !!inv.ZBO;
   if (inv.ZBO) $("zbo-year").value = inv.ZBO.year;
   const ip = d.inventory_policy || {};
-  $("init-stock").value = ip.initial_stock_t ?? 0;
-  $("init-cost").value = ip.initial_stock_cost_mln ?? 0;
+  $("init-storage").value = ip.storage_id || "BASE";
+  $("init-stock").value = ip.initial_stock_t ?? "";
+  $("init-cost").value = ip.initial_stock_cost_mln ?? "";
   if (ip.initial_stock_source_id) $("init-source").value = ip.initial_stock_source_id;
 }
 
-function scheduleCalc() {
-  clearTimeout(state.timer);
-  state.timer = setTimeout(calc, 500);
-}
-
-async function calc() {
-  setStatus("Считаю…", "wait");
-  try {
-    const res = await api("/api/calculate", { plan: readPlan(), scenario_id: $("scenario").value });
-    showError(null);
-    state.result = res;
-    render(res);
-  } catch (e) { showError(e); }
-}
-
 function render(res) {
+  renderDashboard(res);
   const bad = res.constraint_checks.filter((c) => !c.ok);
   const hard = bad.filter((c) => c.severity === "hard");
-  setStatus(res.feasible ? `План ${res.plan_id} в сценарии ${res.scenario_id}: исполним, нарушений нет` : `План ${res.plan_id} в сценарии ${res.scenario_id}: НЕ исполним — ${hard.length} нарушений`, res.feasible ? "ok" : "bad");
-  $("res-scenario").textContent = res.scenario_id;
-  $("viol-count").textContent = bad.length ? `${hard.length} жёстких, ${bad.length - hard.length} справочных` : "нет";
-  table($("violations"), ["Правило", "Год", "Канал", "Факт", "", "Порог", "Превышение", "Уровень", "Причина"],
-    bad.map((c) => [c.rule_id, c.year, c.source_id || "", fmt(c.actual, 3), c.operator, fmt(c.limit, 3), fmt(c.excess, 3), c.severity, c.reason]),
-    (r) => (r[7] === "hard" ? "bad" : "info"));
-  $("warnings").textContent = (res.warnings || []).join(" · ");
-  table($("balance"), ["Год", "Спрос", "в т.ч. крит.", "Запас 1 янв", "Заказано", "Приехало", "Потери", "Выдано", "в т.ч. крит.", "Дефицит", "Остаток", "SL общ", "SL крит", "Резерв, дн", "Бак"],
+  setStatus("Расчёт выполнен. Статус плана показан ниже.");
+  renderResultSummary(res);
+  $("res-scenario").textContent = scenarioLabel(res.scenario_id);
+  $("viol-count").textContent = criticalText(hard.length);
+  renderRiskGroups(res);
+  table($("violations"), ["Ограничение", "Год", "Канал", "Фактически", "Условие", "Предел", "Отклонение", "Уровень", "Объяснение"],
+    bad.map(c => [ruleName(c.rule_id), c.year, c.source_id || "", checkValue(c.actual,c), c.operator, checkValue(c.limit,c), checkValue(c.excess,c), c.severity === "hard" ? "Критическое" : c.severity === "info" ? "Информация" : "Предупреждение", c.reason]),
+    r => r[7] === "Критическое" ? "bad" : r[7] === "Информация" ? "information-row" : "info");
+  $("warnings").textContent = "";
+  table($("balance"), ["Год", "Спрос", "в т.ч. крит.", "Запас 1 янв", "Заказано", "Поставлено", "Потери", "Выдано", "в т.ч. крит.", "Дефицит", "Остаток", "Обеспеченность спроса", "Обеспеченность крит. спроса", "Резерв, дн", "Хранилище"],
     res.yearly_balance.map((r) => [r.year, fmt(r.demand_total_t), fmt(r.demand_critical_t), fmt(r.opening_stock_t), fmt(r.ordered_t), fmt(r.delivered_actual_t), fmt(r.losses_t, 2), fmt(r.served_total_t), fmt(r.served_critical_t), fmt(r.shortage_total_t), fmt(r.closing_stock_t), pct(r.service_level_total), pct(r.service_level_critical), fmt(r.reserve_equivalent_days, 0), `${r.storage_id} ${r.storage_capacity_t} т`]),
     (r) => (parseFloat(String(r[9]).replace(",", ".")) > 0 ? "bad" : ""));
-  table($("finance"), ["Год", "Закупка", "в т.ч. take-or-pay", "Бронь", "Хранение", "Фикс. OPEX", "CAPEX", "Старт. запас", "Итого", "PV", "CAPEX накоп."],
+  table($("finance"), ["Год", "Закупка", "Доплата за мин. объём", "Бронь", "Хранение", "Постоянные расходы", "Инвестиции (CAPEX)", "Старт. запас", "Итого", "Приведённые затраты (PV)", "Инвестиции нарастающим итогом"],
     res.financial_breakdown.map((f) => [f.year, fmt(f.procurement_mln), fmt(f.take_or_pay_topup_mln), fmt(f.reservation_mln), fmt(f.holding_mln), fmt(f.fixed_opex_mln, 0), fmt(f.capex_mln, 0), fmt(f.initial_stock_mln), fmt(f.total_mln), fmt(f.pv_mln), fmt(f.cumulative_capex_mln, 0)]));
   const t = res.totals;
-  $("totals").textContent = `Итого ${fmt(t.total_cost_mln)} млн, PV ${fmt(t.pv_total_mln)} млн, CAPEX ${fmt(t.capex_total_mln, 0)}, выдано ${fmt(t.served_total_t)} т, дефицит ${fmt(t.shortage_total_t)} т, стоимость тонны ${fmt(t.cost_per_served_t_mln, 2)} млн (r = ${t.discount_rate}, база ${t.discount_base_year})`;
+  $("totals").textContent = `Итого ${fmt(t.total_cost_mln)} млн, PV ${fmt(t.pv_total_mln)} млн, CAPEX ${fmt(t.capex_total_mln, 0)}, выдано ${fmt(t.served_total_t)} т, дефицит ${fmt(t.shortage_total_t)} т, стоимость тонны ${fmt(t.cost_per_served_t_mln, 2)} млн (ставка ${pct(t.discount_rate)}, базовый год ${t.discount_base_year})`;
   const sched = res.source_schedule.filter((s) => s.ordered_t || s.reserved_capacity_t);
   table($("schedule"), ["Год", "Канал", "Доступен с", "Бронь", "Заказ", "План", "Факт", "Оплач. объём", "Цена", "Закупка", "За бронь", "Заказать до"],
     sched.map((s) => [s.year, `${s.source_id} ${s.name}`, s.available_from, fmt(s.reserved_capacity_t, 0), fmt(s.ordered_t, 0), fmt(s.delivered_plan_t), fmt(s.delivered_actual_t), fmt(s.payable_volume_t), fmt(s.price_mln_per_t, 2), fmt(s.variable_payment_mln), fmt(s.reservation_payment_mln), s.order_by]),
     (r) => (r[6] !== r[5] ? "info" : ""));
 }
 
-async function compare() {
-  setStatus("Сравниваю BASE и MANDATORY_STRESS…", "wait");
-  try {
-    const cmp = await api("/api/compare", { plan: readPlan(), scenarios: ["BASE", "MANDATORY_STRESS"] });
-    showError(null);
-    $("sec-compare").classList.remove("hidden");
-    const ids = cmp.scenarios;
-    table($("compare-totals"), ["Показатель", ...ids, "Разница"],
-      cmp.totals.map((r) => [r.metric, ...ids.map((s) => fmt(r[s], 2)), fmt(r["delta:" + ids[1]], 2)]));
-    const keep = new Set(["demand_total_t", "delivered_actual_t", "served_total_t", "shortage_total_t", "closing_stock_t", "reserve_equivalent_days", "total_mln", "pv_mln"]);
-    table($("compare-yearly"), ["Год", "Показатель", ...ids, "Разница"],
-      cmp.yearly.filter((r) => keep.has(r.metric)).map((r) => [r.year, r.metric, ...ids.map((s) => fmt(r[s], 1)), fmt(r["delta:" + ids[1]], 1)]),
-      (r) => (r[1] === "shortage_total_t" && parseFloat(String(r[3]).replace(",", ".")) > 0 ? "bad" : ""));
-    const f = cmp.feasible;
-    setStatus(`BASE: ${f.BASE ? "исполним" : "НЕ исполним"} · MANDATORY_STRESS: ${f.MANDATORY_STRESS ? "исполним" : "НЕ исполним"} — таблица сравнения внизу`, f.BASE && f.MANDATORY_STRESS ? "ok" : "bad");
-    $("sec-compare").scrollIntoView({ behavior: "smooth" });
-  } catch (e) { showError(e); }
-}
-
-async function save() {
-  try {
-    const r = await api("/api/plans", { plan: readPlan() });
-    showError(null);
-    renderPlanList(r.plans, r.plan_id);
-    setStatus(`Сохранено: results/plans/${r.saved}`, "ok");
-  } catch (e) { showError(e); }
-}
-
-async function open() {
-  const id = $("plan-list").value;
-  if (!id) return;
-  try {
-    const plan = await api(`/api/plans/${encodeURIComponent(id)}`);
-    fillForm(plan);
-    showError(null);
-    await calc();
-  } catch (e) { showError(e); }
-}
-
-async function exportFile(format) {
-  try {
-    const res = await api(`/api/export?format=${format}&scenario=${encodeURIComponent($("scenario").value)}`, { plan: readPlan() }, true);
-    const blob = await res.blob();
-    const name = (res.headers.get("Content-Disposition") || "").match(/filename="(.+)"/)?.[1] || `export.${format}`;
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = name;
-    a.click();
-    setStatus(`Выгрузка ${name} готова`, "ok");
-  } catch (e) { showError(e); }
-}
-
 function renderPlanList(plans, selected) {
-  $("plan-list").innerHTML = plans.map((p) => `<option value="${p.file.replace(/\.json$/, "")}" ${p.plan_id === selected ? "selected" : ""}>${p.plan_id}${p.label ? " — " + p.label : ""}</option>`).join("");
+  $("plan-list").innerHTML = plans.map((p) => `<option value="${esc(p.file.replace(/\.json$/, ""))}" ${p.plan_id === selected ? "selected" : ""}>${esc(p.label || p.plan_id)} · ${esc(p.plan_id)}</option>`).join("");
 }
 
-async function init() {
-  $("btn-calc").onclick = calc;
-  $("btn-compare").onclick = compare;
-  $("btn-save").onclick = save;
-  $("btn-open").onclick = open;
-  $("btn-csv").onclick = () => exportFile("csv");
-  $("btn-xlsx").onclick = () => exportFile("xlsx");
-  $("btn-reset").onclick = reset;
-  $("btn-download").onclick = downloadPlan;
-  $("plan-file").addEventListener("change", loadFile);
-  try {
-    state.inputs = await api("/api/inputs");
-  } catch (e) { showError(e); return; }
-  buildEditor();
-  renderSources();
-  renderPlanList(state.inputs.plans, "base-v1");
-  if (state.inputs.plans.some((p) => p.plan_id === "base-v1")) { $("plan-list").value = "base-v1"; await open(); } else await calc();
-}
-
-init();

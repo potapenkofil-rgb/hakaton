@@ -1,0 +1,138 @@
+{
+  "plan_id": "no-investments",
+  "scenario_id": "BASE",
+  "label": "только Core + Flex, ничего не строим — ломается с 2039",
+  "decisions": {
+    "supply_orders": [
+      {
+        "source_id": "A",
+        "year": 2035,
+        "ordered_t": 100
+      },
+      {
+        "source_id": "A",
+        "year": 2036,
+        "ordered_t": 100
+      },
+      {
+        "source_id": "A",
+        "year": 2037,
+        "ordered_t": 190
+      },
+      {
+        "source_id": "A",
+        "year": 2038,
+        "ordered_t": 190
+      },
+      {
+        "source_id": "A",
+        "year": 2039,
+        "ordered_t": 190
+      },
+      {
+        "source_id": "A",
+        "year": 2040,
+        "ordered_t": 190
+      },
+      {
+        "source_id": "B",
+        "year": 2035,
+        "ordered_t": 15
+      },
+      {
+        "source_id": "B",
+        "year": 2036,
+        "ordered_t": 50
+      },
+      {
+        "source_id": "B",
+        "year": 2037,
+        "ordered_t": 20
+      },
+      {
+        "source_id": "B",
+        "year": 2038,
+        "ordered_t": 80
+      },
+      {
+        "source_id": "B",
+        "year": 2039,
+        "ordered_t": 110
+      },
+      {
+        "source_id": "B",
+        "year": 2040,
+        "ordered_t": 110
+      }
+    ],
+    "capacity_reservations": [
+      {
+        "source_id": "A",
+        "year": 2035,
+        "reserved_capacity_t": 190
+      },
+      {
+        "source_id": "A",
+        "year": 2036,
+        "reserved_capacity_t": 190
+      },
+      {
+        "source_id": "A",
+        "year": 2037,
+        "reserved_capacity_t": 190
+      },
+      {
+        "source_id": "A",
+        "year": 2038,
+        "reserved_capacity_t": 190
+      },
+      {
+        "source_id": "A",
+        "year": 2039,
+        "reserved_capacity_t": 190
+      },
+      {
+        "source_id": "A",
+        "year": 2040,
+        "reserved_capacity_t": 190
+      },
+      {
+        "source_id": "B",
+        "year": 2035,
+        "reserved_capacity_t": 110
+      },
+      {
+        "source_id": "B",
+        "year": 2036,
+        "reserved_capacity_t": 110
+      },
+      {
+        "source_id": "B",
+        "year": 2037,
+        "reserved_capacity_t": 110
+      },
+      {
+        "source_id": "B",
+        "year": 2038,
+        "reserved_capacity_t": 110
+      },
+      {
+        "source_id": "B",
+        "year": 2039,
+        "reserved_capacity_t": 110
+      },
+      {
+        "source_id": "B",
+        "year": 2040,
+        "reserved_capacity_t": 110
+      }
+    ],
+    "investments": [],
+    "inventory_policy": {
+      "initial_stock_t": 15,
+      "initial_stock_cost_mln": 133.5,
+      "initial_stock_source_id": "B",
+      "storage_id": "BASE"
+    }
+  }
+}

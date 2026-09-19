@@ -1,0 +1,16 @@
+{
+  "plan_id": "test-04-valid-empty-plan",
+  "scenario_id": "BASE",
+  "label": "Пустой, но валидный план: тест нулевых данных и дефицита",
+  "decisions": {
+    "supply_orders": [],
+    "capacity_reservations": [],
+    "investments": [],
+    "inventory_policy": {
+      "initial_stock_t": 0,
+      "initial_stock_source_id": null,
+      "initial_stock_cost_mln": 0,
+      "storage_id": "BASE"
+    }
+  }
+}

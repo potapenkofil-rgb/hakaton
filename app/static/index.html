@@ -1,89 +1,51 @@
 <!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<title>Топливный узел 2035–2040</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="styles.css">
-</head>
-<body>
-<header>
-  <h1>Топливный узел 2035–2040</h1>
-  <div class="bar upload">
-    <label class="file">Загрузить файл плана (JSON) <input type="file" id="plan-file" accept=".json,application/json"></label>
-    <label>Сценарий <select id="scenario"></select></label>
-    <button id="btn-calc" class="primary">Посчитать</button>
-    <span class="hint">примеры файлов — в папке results/plans</span>
-  </div>
-  <div class="bar">
-    <label>План <input id="plan-id" value="base-v1"></label>
-    <button id="btn-download">Скачать план</button>
-    <button id="btn-compare">Сравнить BASE / STRESS</button>
-    <button id="btn-save">Сохранить</button>
-    <label>Открыть <select id="plan-list"></select></label>
-    <button id="btn-open">Открыть</button>
-    <button id="btn-csv">CSV</button>
-    <button id="btn-xlsx">XLSX</button>
-    <button id="btn-reset" title="вернуть план base-v1">Сброс</button>
-  </div>
-  <div id="status" class="status"></div>
-</header>
-
-<main>
-  <div id="error" class="error hidden"></div>
-
-  <section>
-    <h2>Каналы поставки <span class="hint">данные организаторов, менять нельзя</span></h2>
-    <table id="sources" class="compact"></table>
-  </section>
-
-  <section>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Создание сценария · Топливный космоконтур</title><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="workflow.css"></head><body>
+<aside class="sidebar"><a class="brand" href="#scenarios"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="17"/><ellipse cx="24" cy="24" rx="25" ry="8" transform="rotate(-45 24 24)"/><circle class="satellite" cx="39" cy="9" r="3"/></svg><span>Топливный<br>космоконтур 2035</span></a><nav aria-label="Основная навигация">
+<a href="#scenarios" data-icon="clock">Сценарий</a><a href="#overview" data-result data-icon="home">Итоги расчёта</a><a href="#balance-detail" data-result data-icon="chart">Поставки и запасы</a><a href="#infrastructure" data-result data-icon="layers">Инфраструктура</a><a href="#logistics" data-result data-icon="clock">Логистика и сроки</a><a href="#economics" data-result data-icon="trend">Затраты</a><a href="#sec-violations" data-result data-icon="warning">Риски и ограничения</a><a href="#comparison" data-result data-icon="grid">Сравнение</a><a href="#reports" data-result data-icon="file">Экспорт и отчёты</a></nav></aside>
+<div class="workspace"><header class="topbar"><div class="search-box"><span data-icon="search"></span><input id="search" type="search" autocomplete="off" placeholder="Поиск по разделам…" aria-label="Поиск по разделам" aria-controls="search-results"><button id="search-clear" hidden aria-label="Очистить поиск" type="button">×</button><div id="search-results" class="hidden" aria-live="polite"></div></div><span class="top-note">ПРОЕКТНЫЙ ОФИС</span><span class="avatar">ТК</span></header>
+<main><div class="breadcrumb">Сценарий <span>›</span> <b id="breadcrumb-current">Сценарий</b></div><div class="page-heading"><div><h1 id="page-title">Создание сценария снабжения орбитального топливного узла</h1><p id="page-subtitle">Сначала загрузите исходные данные или заполните параметры сценария. Затем проверьте корректность, выполните расчёт и перейдите к результатам.</p></div></div>
+<ol class="stepper" aria-label="Этапы создания сценария"><li><button data-step="1"><b>1</b><span>Входные данные<small>Загрузите или настройте параметры</small></span></button></li><li><button data-step="2"><b>2</b><span>Проверка<small>Контроль корректности</small></span></button></li><li><button data-step="3"><b>3</b><span>Расчёт<small>Выполнение расчёта</small></span></button></li><li><button data-step="4"><b>4</b><span>Результаты<small>Анализ и визуализация</small></span></button></li><li><button data-step="5"><b>5</b><span>Сравнение и экспорт<small>Сохранение и выгрузка</small></span></button></li></ol>
+<div id="status" class="status" role="status" aria-live="polite">Загрузка справочников…</div><button id="retry-inputs" class="hidden">Повторить загрузку</button><div id="error" class="error hidden" role="alert"></div>
+<div id="input-view"><div class="creation-top"><section><div class="section-title"><span data-icon="database"></span><div><h2>Источник данных</h2><p>Выберите способ создания сценария. Вы всегда сможете изменить данные позже.</p></div></div><div class="source-cards"><button id="choose-json"><span data-icon="file"></span><span><strong>Загрузить JSON</strong><small>Импортировать план из файла в формате JSON</small></span><b>›</b></button><button id="choose-manual"><span data-icon="edit"></span><span><strong>Заполнить вручную</strong><small>Создать новый сценарий, введя параметры в форме</small></span><b>›</b></button><button id="choose-saved"><span data-icon="folder"></span><span><strong>Открыть сохранённый сценарий</strong><small>Загрузить ранее сохранённый план из системы</small></span><b>›</b></button></div><input id="plan-file" type="file" accept=".json,application/json" hidden><p id="source-note" class="source-note">Данные ещё не загружены</p></section>
+<section><div class="card-heading"><h2>Статус подготовки</h2><button id="check-now" class="text-button" data-icon="refresh">Проверить сейчас</button></div><div id="readiness"></div></section></div>
+<div class="creation-bottom"><section><div class="section-title"><span data-icon="settings"></span><div><h2>Управление сценарием</h2><p>Настройте основные параметры и сохраните сценарий для дальнейшей работы.</p></div></div><label class="name-field">Название сценария<input id="plan-id" placeholder="Введите название сценария" autocomplete="off"></label><div class="manage-actions"><button id="btn-save" class="primary" data-icon="save">Сохранить</button><button id="choose-open" data-icon="folder">Открыть</button><button id="btn-reset" data-icon="refresh">Создать новый</button></div></section>
+<section><div class="card-heading"><h2>Краткое описание сценария</h2><button id="edit-scenario" class="text-button" data-icon="edit">Редактировать</button></div><div id="scenario-summary" class="scenario-summary"></div></section></div>
+<details id="controls" class="control-panel"><summary>Параметры сценария <span>Заказы, брони, инвестиции и начальный запас</span></summary><div class="control-body"><p class="hint">Период и спрос заданы данными кейса. Объёмы — в тоннах, стоимость — в млн условных единиц.</p><label class="scenario-label">Расчётный сценарий <select id="scenario" aria-label="Расчётный сценарий"></select></label><div id="form-content"><div id="plan-editor">  <section>
     <h2>План: заказы и брони, т/год <span class="hint">в каждой ячейке: заказ / бронь</span></h2>
     <table id="editor" class="editor"></table>
     <div class="row">
       <fieldset>
         <legend>Инвестиции</legend>
-        <label><input type="checkbox" id="en-on"> Earth-New: опцион в <select id="en-option"></select> исполнение в <select id="en-exercise"></select> <span class="hint">90 + 270, мощность через 24 мес</span></label><br>
-        <label><input type="checkbox" id="isru-on"> Lunar-ISRU: финансирование 1250 по годам <span id="isru-years"></span> <span class="hint">до 2038, +70/год</span></label><br>
-        <label><input type="checkbox" id="zbo-on"> ZBO: оплата 180 в <select id="zbo-year"></select> <span class="hint">120 т, потери 1,2 %, +12/год</span></label>
+        <label><input type="checkbox" id="en-on"> Earth-New: опцион в <select id="en-option"></select> исполнение в <select id="en-exercise"></select> </label><br>
+        <label><input type="checkbox" id="isru-on"> Lunar-ISRU: финансирование по годам <span id="isru-years"></span> </label><br>
+        <label><input type="checkbox" id="zbo-on"> ZBO: оплата в <select id="zbo-year"></select> </label>
       </fieldset>
       <fieldset>
         <legend>Запас на 1 января 2035</legend>
-        <label>Тонн <input id="init-stock" type="number" min="0" step="0.1" value="15"></label>
-        <label>Стоимость, млн <input id="init-cost" type="number" min="0" step="0.1" value="133.5"></label>
+        <label>Тонн <input id="init-stock" type="number" min="0" step="0.1" value=""></label>
+        <label>Стоимость, млн <input id="init-cost" type="number" min="0" step="0.1" value=""></label>
         <label>Откуда <select id="init-source"></select></label>
-      </fieldset>
+      <label>Хранилище <select id="init-storage"></select></label></fieldset>
     </div>
   </section>
 
-  <section id="sec-violations">
-    <h2>Нарушения <span id="viol-count" class="hint"></span></h2>
-    <table id="violations" class="compact"></table>
-    <div id="warnings" class="hint"></div>
-  </section>
-
-  <section>
-    <h2>Баланс по годам <span id="res-scenario" class="hint"></span></h2>
-    <table id="balance" class="compact"></table>
-  </section>
-
-  <section>
-    <h2>Деньги по годам, млн</h2>
-    <table id="finance" class="compact"></table>
-    <div id="totals" class="totals"></div>
-  </section>
-
-  <section>
-    <h2>Поставки по каналам</h2>
-    <table id="schedule" class="compact"></table>
-  </section>
-
-  <section id="sec-compare" class="hidden">
-    <h2>Сравнение сценариев</h2>
-    <table id="compare-totals" class="compact"></table>
-    <table id="compare-yearly" class="compact"></table>
-  </section>
-</main>
-<script src="app.js"></script>
-</body>
-</html>
+</div></div><details id="raw-panel"><summary>Исходный JSON <span>Исправление структуры импортированного плана</span></summary><label for="raw-plan" class="hint">Правки применяются кнопкой «Применить JSON».</label><textarea id="raw-plan" spellcheck="false" rows="12"></textarea><button id="apply-json">Применить JSON</button></details><details><summary>Исходный спрос и тарифы</summary><p class="hint">Исходные данные задачи. Условия выбранного сценария учитываются при расчёте.</p><table id="input-demand"></table><table id="input-sources"></table></details></div></details>
+<section class="after-calc"><div class="section-title"><span data-icon="chart"></span><div><h2>После расчёта вы получите</h2><p>На следующих шагах вы получите поставки и запасы, затраты и причины нарушений.</p></div></div><div class="preview-grid"><div data-icon="chart"><span>Поставки и запасы<small>Поставки, спрос и остаток</small></span></div><div data-icon="layers"><span>Инфраструктура<small>Каналы и мощности</small></span></div><div data-icon="clock"><span>Логистика и сроки<small>Доступность и сроки заказа</small></span></div><div data-icon="trend"><span>Затраты<small>Инвестиции и расходы</small></span></div><div data-icon="warning"><span>Риски и ограничения<small>Причины нарушений</small></span></div><div data-icon="file"><span>Экспорт и отчёты<small>CSV, XLSX и сравнение</small></span></div></div></section><div class="stage-actions"><span class="hint">Шаг 1 из 5 · Входные данные</span><button id="btn-validate" class="primary">Перейти к проверке <span>→</span></button></div></div>
+<div id="validation-view" class="hidden"><section><h2>Проверка исходных данных</h2><p>Проверяем формат, обязательные поля, справочники и допустимые значения. Исполнимость плана и ограничения мощности оценит расчётное ядро.</p><div id="validation-results" class="validation-grid"></div></section><div class="stage-actions"><button id="back-input">← Исправить данные</button><button id="btn-calc" class="primary" disabled>Рассчитать сценарий →</button></div></div>
+<div id="calculating-view" class="hidden"><section class="loading-card" role="status"><span class="spinner"></span><h2>Выполняется расчёт сценария</h2><p>Рассчитываем поставки, запасы, затраты и проверяем ограничения.</p><div class="skeleton-line"></div><div class="skeleton-grid"><div></div><div></div></div></section></div>
+<div id="results-view" class="hidden"><div id="dashboard">
+<div id="overview" data-nav-section="overview" class="analysis-section"><div id="result-plan-status"></div><div class="results-toolbar"><div><strong id="result-name"></strong><span id="result-scenario"></span></div><label>Сценарий <select id="result-scenario-select"></select></label><button id="edit-results">Изменить исходные данные</button><button id="to-reports">Сравнение и экспорт →</button></div><div id="kpis" class="kpi-grid"></div></div>
+<div id="balance-detail" data-nav-section="balance-detail" class="analysis-section"><h2>Поставки и запасы</h2><div class="chart-filters"><span>Период на графиках</span><label>С <select id="chart-from"></select></label><label>По <select id="chart-to"></select></label><span class="hint">Показатели — за весь период <span id="period-label"></span></span></div><div class="dashboard-row"><section class="chart-card"><div class="card-heading"><h2>Поставки и спрос на орбитальное топливо</h2><span class="hint">тонны</span></div><div id="balance-legend" class="legend"></div><div id="balance-chart"></div></section><section><h2>Ключевые показатели по годам</h2><div class="table-scroll"><table id="year-summary"></table></div><p class="footnote">Остаток — на конец года. Затраты — млн усл. ед.</p></section></div>
+<details class="data-details"><summary>Подробные данные · поставки и запасы по годам <span id="res-scenario"></span></summary><div class="table-scroll"><table id="balance" class="compact"></table></div></details></div>
+<div id="infrastructure" data-nav-section="infrastructure" class="analysis-section"><h2>Инфраструктура</h2><div class="dashboard-row lower"><section id="structure"><h2>Структура сценария</h2><p class="hint">Фактические поставки по источникам, т</p><div class="structure-layout"><div id="source-chart"></div><div id="source-legend" class="source-legend"></div></div><div id="structure-summary" class="mini-grid"></div></section><section id="insights"><h2>Допущения, ограничения и результаты</h2><div id="insight-content"></div><a class="text-link" href="#sec-violations">Открыть подробный анализ →</a></section></div><details class="data-details"><summary>Подробные данные · характеристики каналов</summary><div class="table-scroll"><table id="sources" class="compact"></table></div></details></div>
+<section id="logistics" data-nav-section="logistics" class="analysis-section"><h2>Логистика и сроки</h2><p class="hint">Доступность источников и сроки размещения заказов по выбранному плану.</p><div id="logistics-summary"></div><details class="data-details"><summary>Подробные данные · поставки по каналам и сроки заказа</summary><p class="hint">Объёмы — т; цена — млн усл. ед./т; платежи — млн усл. ед.</p><div class="table-scroll"><table id="schedule" class="compact"></table></div></details></section>
+<section id="economics" data-nav-section="economics" class="analysis-section"><h2>Затраты</h2><div id="cost-summary" class="mini-grid"></div><details class="data-details"><summary>Подробные данные · затраты по годам, млн усл. ед.</summary><div class="table-scroll"><table id="finance" class="compact"></table></div><div id="totals" class="totals"></div></details></section>
+<section id="sec-violations" data-nav-section="sec-violations" class="analysis-section"><h2>Риски и ограничения <span id="viol-count" class="hint"></span></h2><h3>Критические нарушения</h3><div id="critical-issues" class="violation-grid"></div><div class="notice warning"><h3>Предупреждения</h3><div id="warning-issues"></div></div><div class="notice information"><h3>Информация</h3><div id="information-issues"></div></div><details class="data-details"><summary>Подробные данные · проверки ограничений</summary><div class="table-scroll"><table id="violations" class="compact"></table></div><div id="warnings" class="hint"></div></details></section>
+</div></div>
+<div id="reports-view" class="hidden"><div data-nav-section="reports" class="analysis-section"><div id="report-plan-status"></div><div id="report-kpis" class="mini-grid report-kpis"></div></div>
+<section id="comparison" data-nav-section="comparison" class="analysis-section"><div class="card-heading"><div><h2>Сравнение</h2><p class="hint">Один план в базовом и обязательном стресс-сценариях.</p></div><button id="btn-compare" class="primary">Сравнить BASE / MANDATORY_STRESS</button></div><div class="comparison-slot" aria-live="polite" aria-busy="false"><div id="compare-placeholder" class="compare-placeholder"><p>Сравнение ещё не выполнено.</p><p class="hint">Нажмите «Сравнить», чтобы увидеть исполнимость, затраты и дефицит в обоих сценариях.</p></div><div id="compare-loading" class="hidden"><p>Сравниваем сценарии…</p><div class="skeleton-grid"><div></div><div></div></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div><div id="sec-compare" class="hidden"><div id="comparison-statuses" class="comparison-statuses"></div><div class="table-scroll"><table id="compare-summary"></table></div></div></div></section>
+<section data-nav-section="reports" class="analysis-section"><div class="card-heading"><h2>Нарушения выбранного сценария</h2></div><div id="report-issues"></div></section>
+<section id="reports" data-nav-section="reports" class="analysis-section"><h2>Экспорт и отчёты</h2><div id="export-plan-status" class="compact-status"></div><p id="report-context" class="hint"></p><div class="bar"><button id="btn-download">Скачать план JSON</button><button id="btn-csv">Экспорт CSV</button><button id="btn-xlsx">Экспорт XLSX</button></div></section>
+<details id="comparison-details" class="data-details" hidden><summary>Подробные данные сравнения · все показатели и годовые таблицы</summary><p class="hint">Объёмы — т, деньги — млн усл. ед. Разница — STRESS − BASE; проценты сравниваются в п.п.</p><div class="table-scroll"><table id="compare-totals" class="compact"></table><table id="compare-yearly" class="compact"></table></div></details></div><footer>Топливный космоконтур 2035 <span>Объёмы — т · деньги — млн усл. ед.</span></footer></main></div>
+<dialog id="open-dialog"><div class="card-heading"><h2>Открыть сохранённый сценарий</h2><button id="close-dialog" aria-label="Закрыть">×</button></div><label for="plan-list">Сохранённые планы</label><select id="plan-list"></select><p class="hint">После открытия проверьте данные и запустите расчёт.</p><button id="btn-open" class="primary">Открыть</button></dialog><div id="chart-tooltip" role="tooltip" class="hidden"></div>
+<script src="validation.js"></script><script src="dashboard.js"></script><script src="charts.js"></script><script src="presentation.js"></script><script src="app.js"></script><script src="navigation.js"></script><script src="workflow.js"></script></body></html>

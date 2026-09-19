@@ -1,0 +1,2 @@
+investment_id,name,option_fee_mln,exercise_cost_mln,total_capex_mln,commissioning_rule,fixed_opex_mln_per_year,status,notes
+ZBO,ZBO,0,10,10,,1,SYNTHETIC,

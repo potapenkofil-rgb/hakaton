@@ -1,0 +1,32 @@
+{
+  "plan_id": "invalid",
+  "scenario_id": "BASE",
+  "label": "ошибки ввода: отрицательный заказ и чужой канал",
+  "decisions": {
+    "supply_orders": [
+      {
+        "source_id": "A",
+        "year": 2035,
+        "ordered_t": -5
+      },
+      {
+        "source_id": "F",
+        "year": 2035,
+        "ordered_t": 10
+      }
+    ],
+    "capacity_reservations": [
+      {
+        "source_id": "A",
+        "year": 2041,
+        "reserved_capacity_t": 100
+      }
+    ],
+    "investments": [],
+    "inventory_policy": {
+      "initial_stock_t": 15,
+      "initial_stock_cost_mln": 133.5,
+      "storage_id": "BASE"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+rule_id,year,metric,operator,limit,actual,excess,unit,ok,severity,reason
+BASE_TOTAL_SERVICE,2039,total_service_level,>=,0.97,0.917611,0.052389,share,0,info,"спрос 368.0 т, выдано 337.7 т, не хватило 30.3 т"
+RESERVE_45D,2039,reserve_equivalent_days,>=,45.0,21.345557,23.654443,days,0,hard,запас на 1 января 21.5 т при требуемых 45.4 т
+BASE_TOTAL_SERVICE,2040,total_service_level,>=,0.97,0.881159,0.088841,share,0,info,"спрос 448.5 т, выдано 395.2 т, не хватило 53.3 т"
+RESERVE_45D,2040,reserve_equivalent_days,>=,45.0,0.0,45.0,days,0,hard,запас на 1 января 0.0 т при требуемых 55.3 т
+BASE_CRITICAL_SERVICE,2035,critical_service_level,>=,0.99,1.0,0.0,share,1,info,"критический спрос 80.0 т, выдано 80.0 т, не хватило 0.0 т"
+BASE_TOTAL_SERVICE,2035,total_service_level,>=,0.97,1.0,0.0,share,1,info,"спрос 100.0 т, выдано 100.0 т, не хватило 0.0 т"
+EMERGENCY_BASE_STREAK,2035,emergency_base_channel_consecutive_years,<=,2.0,0.0,0.0,years,1,hard,Emergency не был основным каналом
+RESERVE_45D,2035,reserve_equivalent_days,>=,45.0,54.75,0.0,days,1,hard,запас на 1 января 15.0 т при требуемых 12.3 т
+BASE_CRITICAL_SERVICE,2036,critical_service_level,>=,0.99,1.0,0.0,share,1,info,"критический спрос 105.0 т, выдано 105.0 т, не хватило 0.0 т"
+BASE_TOTAL_SERVICE,2036,total_service_level,>=,0.97,1.0,0.0,share,1,info,"спрос 140.0 т, выдано 140.0 т, не хватило 0.0 т"
+RESERVE_45D,2036,reserve_equivalent_days,>=,45.0,64.722321,0.0,days,1,hard,запас на 1 января 24.8 т при требуемых 17.3 т
+BASE_CRITICAL_SERVICE,2037,critical_service_level,>=,0.99,1.0,0.0,share,1,info,"критический спрос 135.0 т, выдано 135.0 т, не хватило 0.0 т"
+BASE_TOTAL_SERVICE,2037,total_service_level,>=,0.97,1.0,0.0,share,1,info,"спрос 190.0 т, выдано 190.0 т, не хватило 0.0 т"
+CAPEX_2037,2037,cumulative_capex,<=,1800.0,1790.0,0.0,mln_units,1,hard,CAPEX нарастающим итогом к концу 2037: 1790.0
+RESERVE_45D,2037,reserve_equivalent_days,>=,45.0,72.279605,0.0,days,1,hard,запас на 1 января 37.6 т при требуемых 23.4 т
+BASE_CRITICAL_SERVICE,2038,critical_service_level,>=,0.99,1.0,0.0,share,1,info,"критический спрос 195.5 т, выдано 195.5 т, не хватило 0.0 т"
+BASE_TOTAL_SERVICE,2038,total_service_level,>=,0.97,1.0,0.0,share,1,info,"спрос 287.5 т, выдано 287.5 т, не хватило 0.0 т"
+RESERVE_45D,2038,reserve_equivalent_days,>=,45.0,63.687739,0.0,days,1,hard,запас на 1 января 50.2 т при требуемых 35.4 т
+STRESS_LOSS_LIMIT,2038,losses_divided_by_throughput,<=,0.02,0.012,0.0,share,1,hard,потери 3.1 т от поступления 262.0 т (ZBO)
+BASE_CRITICAL_SERVICE,2039,critical_service_level,>=,0.99,1.0,0.0,share,1,info,"критический спрос 241.5 т, выдано 241.5 т, не хватило 0.0 т"
+STRESS_LOSS_LIMIT,2039,losses_divided_by_throughput,<=,0.02,0.012,0.0,share,1,hard,потери 3.8 т от поступления 320.0 т (ZBO)
+BASE_CRITICAL_SERVICE,2040,critical_service_level,>=,0.99,1.0,0.0,share,1,info,"критический спрос 287.5 т, выдано 287.5 т, не хватило 0.0 т"
+CAPEX_2040,2040,cumulative_capex,<=,2800.0,1790.0,0.0,mln_units,1,hard,CAPEX нарастающим итогом к концу 2040: 1790.0
+STRESS_LOSS_LIMIT,2040,losses_divided_by_throughput,<=,0.02,0.012,0.0,share,1,hard,потери 4.8 т от поступления 400.0 т (ZBO)
