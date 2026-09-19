@@ -28,6 +28,24 @@ const METRICS = {
 };
 
 const UNITS = { month: "мес", week: "нед", day: "дн" };
+const SHORT = { BASE: "Стандартный", MANDATORY_STRESS: "Стрессовый" };
+
+function scenarioName(id) {
+  if (SHORT[id]) return SHORT[id];
+  const s = (state.inputs?.scenarios || []).find((x) => x.scenario_id === id);
+  return s?.label || id;
+}
+
+const RELIABILITY = { constant: "", first_operating_year: "первый год", later: "потом" };
+
+function reliability(raw) {
+  if (typeof raw === "number") return num(raw, 2);
+  return String(raw ?? "").split(";").map((part) => {
+    const [k, v] = part.split(":");
+    const label = k in RELIABILITY ? RELIABILITY[k] : k + ":";
+    return (label ? label + " " : "") + num(Number(v), 2);
+  }).join(" · ");
+}
 
 const num = (v, d = 1) => (typeof v === "number" ? v.toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d }) : v ?? "");
 const pct = (v) => (typeof v === "number" ? num(v * 100, 1) + " %" : "");
@@ -99,9 +117,40 @@ function chartStock(res) {
   s += `<path d="${line}" fill="none" stroke="#1f5fbf" stroke-width="2"/>`;
   m.forEach((r, i) => {
     if (r.shortage_t > 0) s += `<rect x="${(x(i) - 3).toFixed(1)}" y="${H - B - 6}" width="6" height="6" fill="#b3261e"/>`;
-    s += `<rect x="${(x(i) - w / 2).toFixed(1)}" y="${T}" width="${w.toFixed(1)}" height="${H - T - B}" fill="transparent"><title>${r.period}: остаток ${num(r.closing_t)} т из ${num(r.capacity_t, 0)}, дефицит ${num(r.shortage_t)} т</title></rect>`;
+    if (r.month === 12) s += `<circle cx="${x(i).toFixed(1)}" cy="${y(r.closing_t).toFixed(1)}" r="4" fill="#fff" stroke="#1f5fbf" stroke-width="2"/><text x="${x(i).toFixed(1)}" y="${(y(r.closing_t) - 10).toFixed(1)}" text-anchor="middle" font-size="11" fill="#16181d">${num(r.closing_t, 0)}</text>`;
   });
+  s += `<g class="hover" style="display:none"><line y1="${T}" y2="${H - B}" stroke="#16181d" stroke-width="1" stroke-dasharray="3 3"/><circle r="5" fill="#1f5fbf" stroke="#fff" stroke-width="2"/><rect height="22" rx="4" fill="#16181d"/><text font-size="12" fill="#fff"></text></g>`;
+  s += `<rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent" class="hit"/>`;
   $("chart-stock").innerHTML = s + "</svg>";
+  hoverStock(m, { W, L, R, T, x, y });
+}
+
+const MONTHS = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+
+function hoverStock(m, g) {
+  const svg = $("chart-stock").querySelector("svg");
+  const box = svg.querySelector(".hover");
+  const [guide, dot, bg, text] = box.children;
+  svg.addEventListener("mousemove", (e) => {
+    const r = svg.getBoundingClientRect();
+    const px = ((e.clientX - r.left) / r.width) * g.W;
+    const i = Math.max(0, Math.min(m.length - 1, Math.round(((px - g.L) / (g.W - g.L - g.R)) * (m.length - 1))));
+    const row = m[i];
+    const cx = g.x(i), cy = g.y(row.closing_t);
+    let label = `${MONTHS[row.month - 1]} ${row.year} · ${num(row.closing_t)} т`;
+    if (row.shortage_t > 0) label += ` · дефицит ${num(row.shortage_t)} т`;
+    text.textContent = label;
+    const tw = text.getComputedTextLength() + 16;
+    const left = cx + tw + 12 > g.W - g.R;
+    const bx = left ? cx - tw - 10 : cx + 10;
+    const by = Math.max(g.T, cy - 32);
+    guide.setAttribute("x1", cx); guide.setAttribute("x2", cx);
+    dot.setAttribute("cx", cx); dot.setAttribute("cy", cy);
+    bg.setAttribute("x", bx); bg.setAttribute("y", by); bg.setAttribute("width", tw);
+    text.setAttribute("x", bx + 8); text.setAttribute("y", by + 15);
+    box.style.display = "";
+  });
+  svg.addEventListener("mouseleave", () => { box.style.display = "none"; });
 }
 
 function chartDemand(res) {
@@ -169,7 +218,7 @@ function renderTables(res) {
 function render(res) {
   state.result = res;
   const hard = renderViolations(res);
-  setStatus(`${res.plan_id} · ${res.scenario_id}: ${res.feasible ? "план исполним" : `план не исполним, нарушений: ${hard}`}`, res.feasible ? "ok" : "bad");
+  setStatus(`${res.plan_id} · ${scenarioName(res.scenario_id).toLowerCase()} сценарий: ${res.feasible ? "план исполним" : `план не исполним, нарушений: ${hard}`}`, res.feasible ? "ok" : "bad");
   renderSummary(res);
   chartStock(res);
   chartDemand(res);
@@ -200,14 +249,14 @@ function buildEditor() {
   yearOptions($("zbo-year"), years, 2037);
   $("isru-years").innerHTML = years.map((y) => `<label><input type="checkbox" class="isru-year" value="${y}">${y}</label>`).join("");
   $("init-source").innerHTML = sources.map((s) => `<option value="${s.id}">${s.id} · ${esc(s.name)}, ${num(s.price, 2)} млн/т</option>`).join("");
-  $("scenario").innerHTML = scenarios.map((s) => `<button type="button" data-id="${s.scenario_id}" title="${esc(s.label)}">${s.scenario_id}</button>`).join("");
+  $("scenario").innerHTML = scenarios.map((s) => `<button type="button" data-id="${s.scenario_id}" title="${esc(s.label)} (${s.scenario_id})">${scenarioName(s.scenario_id)}</button>`).join("");
   $("scenario").addEventListener("click", (e) => { if (e.target.dataset.id) setScenario(e.target.dataset.id, true); });
   setScenario(scenarios.some((s) => s.scenario_id === "BASE") ? "BASE" : scenarios[0].scenario_id);
   const plan = $("plan");
   plan.addEventListener("input", () => setStatus("План изменён, нажмите «Посчитать»", "wait"));
   plan.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.tagName === "INPUT") calc(); });
   table($("sources-table"), ["~Канал", "Мощность, т/год", "Цена, млн/т", "Бронь, млн за т", "Take-or-pay", "Срок заказа", "Доступен с", "Надёжность", "~Примечание"],
-    sources.map((s) => [`${s.id} · ${esc(s.name)}`, num(s.capacity, 0), num(s.price, 2), num(s.reservation_rate, 2), pct(s.top_share), `${s.lead_time_min === s.lead_time_max ? s.lead_time_max : `${s.lead_time_min}–${s.lead_time_max}`} ${UNITS[s.lead_time_unit] || s.lead_time_unit}`, s.available_from ?? "после инвестиции", num(s.reliability, 2), esc(s.notes)]));
+    sources.map((s) => [`${s.id} · ${esc(s.name)}`, num(s.capacity, 0), num(s.price, 2), num(s.reservation_rate, 2), pct(s.top_share), `${s.lead_time_min === s.lead_time_max ? s.lead_time_max : `${s.lead_time_min}–${s.lead_time_max}`} ${UNITS[s.lead_time_unit] || s.lead_time_unit}`, s.available_from ?? "после инвестиции", reliability(s.reliability), esc(s.notes)]));
 }
 
 function readPlan() {
@@ -283,9 +332,9 @@ async function compare() {
     });
     cmp.yearly.filter((r) => r.metric === "shortage_total_t").forEach((r) => rows.push([`Дефицит ${r.year}, т`, ...ids.map((s) => num(r[s])), num(r["delta:" + ids[1]])]));
     cmp.yearly.filter((r) => r.metric === "reserve_equivalent_days").forEach((r) => rows.push([`Резерв ${r.year}, дней`, ...ids.map((s) => num(Math.min(r[s], 999), 0)), ""]));
-    table($("compare-table"), ["~Показатель", ...ids, "Разница"], rows, (r) => (r[0] === "Исполним" && r.includes("нет") ? "bad" : ""));
+    table($("compare-table"), ["~Показатель", ...ids.map(scenarioName), "Разница"], rows, (r) => (r[0] === "Исполним" && r.includes("нет") ? "bad" : ""));
     $("compare").classList.remove("hidden");
-    setStatus(`BASE: ${cmp.feasible.BASE ? "исполним" : "не исполним"} · MANDATORY_STRESS: ${cmp.feasible.MANDATORY_STRESS ? "исполним" : "не исполним"}`, cmp.feasible.BASE && cmp.feasible.MANDATORY_STRESS ? "ok" : "bad");
+    setStatus(ids.map((s) => `${scenarioName(s)}: ${cmp.feasible[s] ? "исполним" : "не исполним"}`).join(" · "), ids.every((s) => cmp.feasible[s]) ? "ok" : "bad");
     $("compare").scrollIntoView({ block: "start" });
   } catch (e) { showError(e); }
 }
@@ -357,9 +406,12 @@ function spy() {
   const links = [...document.querySelectorAll(".nav a")];
   const sections = links.map((a) => document.querySelector(a.getAttribute("href"))).filter(Boolean);
   const mark = () => {
+    const shown = sections.filter((s) => !s.classList.contains("hidden"));
     const line = window.scrollY + 120;
-    let current = sections[0];
-    sections.forEach((s) => { if (!s.classList.contains("hidden") && s.offsetTop <= line) current = s; });
+    const atBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+    let current = shown[0];
+    shown.forEach((s) => { if (s.offsetTop <= line) current = s; });
+    if (atBottom) current = shown[shown.length - 1];
     links.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === "#" + current.id));
   };
   window.addEventListener("scroll", mark, { passive: true });
