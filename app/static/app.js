@@ -552,7 +552,7 @@ async function loadPlan(plan) {
   // Validate the original before the editor can omit unknown channels or years.
   setStatus("Считаю…", "wait");
   const scenario = plan.scenario_id || state.scenario;
-  const res = await api("/api/calculate", { plan, scenario_id: scenario, overrides: readOverrides() });
+  const res = await api("/api/calculate", { plan, scenario_id: scenario, overrides: plan.data_overrides || {} });
   fillForm(plan);
   showError(null);
   render(res);
