@@ -17,6 +17,7 @@
  ────────────────────┘        │                │
  configs/scenarios/           ▼                ▼
    base, mandatory_stress ─► Scenario ─► Engine.run(plan, scenario)
+   (правки чисел кейса из интерфейса: overrides → копия CaseData, хэш +суффикс)
    team_* (TEAM_ASSUMPTION)                    │
                                                │  1 доступность каналов и хранилищ по месяцам
                                                │  2 поставки: заказ ∧ бронь ∧ мощность × доля сценария

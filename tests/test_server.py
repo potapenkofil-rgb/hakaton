@@ -67,6 +67,21 @@ def test_calculate_matches_cli(server, base_plan, case, scenarios, assumptions):
     assert status == 200 and body["scenario_id"] == "BASE" and body["feasible"] is True
 
 
+def test_calculate_with_overrides(server, base_plan):
+    over = {"sources": {"A": {"price": 7.0}}, "demand": {"2040": {"total": 420}}}
+    status, body, _ = call(server, "/api/calculate", {"plan": base_plan, "overrides": over})
+    assert status == 200 and body["meta"]["overrides"] == {"sources": {"A": {"price": 7.0}}, "demand": {"2040": {"total": 420.0}}}
+    assert "+" in body["meta"]["data_hash"]
+    status, plain, _ = call(server, "/api/calculate", {"plan": base_plan})
+    assert plain["meta"]["overrides"] == {} and body["totals"]["pv_total_mln"] > plain["totals"]["pv_total_mln"]
+    status, cmp, _ = call(server, "/api/compare", {"plan": base_plan, "overrides": over})
+    assert status == 200 and cmp["results"]["BASE"]["meta"]["overrides"] == body["meta"]["overrides"]
+    status, err, _ = call(server, "/api/calculate", {"plan": base_plan, "overrides": {"sources": {"A": {"price": -5}}}})
+    assert status == 400 and err["details"][0]["path"] == "overrides.sources.A.price"
+    status, raw, headers = call(server, "/api/export?format=csv", {"plan": base_plan, "overrides": over}, raw=True)
+    assert status == 200 and b"override:sources:A" in raw
+
+
 def test_calculate_invalid_plan_400(server):
     status, body, _ = call(server, "/api/calculate", {"plan": make_plan(orders={"A": {2035: -1}})})
     assert status == 400 and body["error"] == "INVALID_PLAN"

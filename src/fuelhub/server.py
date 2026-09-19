@@ -43,12 +43,14 @@ class Api:
         return inputs_payload(self.ctx) | {"plans": list_plans(), "plans_dir": str(PLANS_DIR)}
 
     def calculate(self, body: dict) -> dict:
-        plan = parse_plan(body.get("plan", body), self.ctx.case)
-        return self.ctx.run(plan, body.get("scenario_id"))
+        case = self.ctx.with_overrides(body.get("overrides"))
+        plan = parse_plan(body.get("plan", body), case)
+        return self.ctx.run(plan, body.get("scenario_id"), case)
 
     def compare(self, body: dict) -> dict:
-        plan = parse_plan(body.get("plan", body), self.ctx.case)
-        return self.ctx.compare(plan, body.get("scenarios") or ["BASE", "MANDATORY_STRESS"])
+        case = self.ctx.with_overrides(body.get("overrides"))
+        plan = parse_plan(body.get("plan", body), case)
+        return self.ctx.compare(plan, body.get("scenarios") or ["BASE", "MANDATORY_STRESS"], case)
 
     def save(self, body: dict) -> dict:
         plan = parse_plan(body.get("plan", body), self.ctx.case)
@@ -62,8 +64,9 @@ class Api:
         return json.loads(path.read_text(encoding="utf-8"))
 
     def export(self, body: dict, fmt: str, scenario_id: str | None) -> tuple[bytes, str, str]:
-        plan = parse_plan(body.get("plan", body), self.ctx.case)
-        res = self.ctx.run(plan, scenario_id or body.get("scenario_id"))
+        case = self.ctx.with_overrides(body.get("overrides"))
+        plan = parse_plan(body.get("plan", body), case)
+        res = self.ctx.run(plan, scenario_id or body.get("scenario_id"), case)
         name = f"{safe_id(plan.plan_id)}_{res['scenario_id']}"
         tmp = RESULTS_DIR / "exports"
         tmp.mkdir(parents=True, exist_ok=True)

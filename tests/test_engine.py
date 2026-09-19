@@ -506,3 +506,28 @@ def test_constraint_profile_makes_base_rules_hard(case, scenarios, assumptions):
     squeeze = run(case, scenarios, assumptions, plan, "TEAM_FLEX_SQUEEZE")
     assert all(c["severity"] == "info" for c in squeeze["constraint_checks"] if c["rule_id"].startswith("BASE_"))
     assert any(c["rule_id"] == "STRESS_LOSS_LIMIT" and c["severity"] == "hard" for c in squeeze["constraint_checks"])
+
+
+def test_overrides_change_case_and_hash(case, scenarios, assumptions):
+    from fuelhub.data import with_overrides
+    over, errors = with_overrides(case, {"sources": {"A": {"price": 7.0}}, "storages": {"ZBO": {"capacity": 150}}, "demand": {"2040": {"total": 420, "critical": 260}}})
+    assert errors == []
+    assert over.sources["A"].price == 7.0 and case.sources["A"].price == 6.2
+    assert over.storages["ZBO"].capacity == 150 and over.demand[2040].total == 420
+    assert over.data_hash.startswith(case.data_hash + "+") and over.overrides["demand"]["2040"] == {"total": 420.0, "critical": 260.0}
+    plan = parse_plan(full_plan(), over)
+    res = calculate(over, scenarios["BASE"], plan, assumptions)
+    assert res["meta"]["overrides"] == over.overrides and res["meta"]["data_hash"] == over.data_hash
+    assert year_row(res, "yearly_balance", 2040)["demand_total_t"] == 420
+    assert year_row(res, "source_schedule", 2035, source_id="A")["price_mln_per_t"] == 7.0
+    same, errors = with_overrides(case, {"sources": {"A": {"price": 6.2}}})
+    assert errors == [] and same is case
+
+
+def test_overrides_are_validated(case):
+    from fuelhub.data import with_overrides
+    bad = {"sources": {"Z": {"price": 1}, "A": {"name": "x", "price": -1, "capacity": True}}, "demand": {"2041": {"total": 1}}, "foo": {}}
+    over, errors = with_overrides(case, bad)
+    assert over is case
+    paths = [e["path"] for e in errors]
+    assert paths == ["overrides.sources.Z", "overrides.sources.A.name", "overrides.sources.A.price", "overrides.sources.A.capacity", "overrides.demand.2041", "overrides.foo"]

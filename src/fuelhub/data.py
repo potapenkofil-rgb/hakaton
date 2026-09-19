@@ -3,7 +3,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -110,6 +110,7 @@ class CaseData:
     constraints: tuple[Constraint, ...]
     data_hash: str
     data_dir: str
+    overrides: dict = field(default_factory=dict)
 
     @property
     def first_year(self) -> int:
@@ -204,6 +205,53 @@ def load_case(data_dir: Path | str = DATA_DIR) -> CaseData:
         h.update((d / name).read_bytes())
     years = tuple(sorted(demand))
     return CaseData(years, demand, sources, storages, investments, constraints, h.hexdigest()[:16], str(d))
+
+
+OVERRIDABLE = {
+    "sources": ("capacity", "price", "reservation_rate", "top_share"),
+    "storages": ("capacity", "loss_rate", "holding_cost", "capex", "fixed_opex"),
+    "demand": ("total", "critical"),
+}
+
+
+def with_overrides(case: CaseData, overrides: dict | None) -> tuple[CaseData, list[dict]]:
+    if not overrides:
+        return case, []
+    errors = []
+    tables = {"sources": dict(case.sources), "storages": dict(case.storages), "demand": dict(case.demand)}
+    clean = {}
+    for kind, items in overrides.items():
+        if kind not in OVERRIDABLE:
+            errors.append({"path": f"overrides.{kind}", "message": f"неизвестный раздел; есть {', '.join(OVERRIDABLE)}"})
+            continue
+        if not isinstance(items, dict):
+            errors.append({"path": f"overrides.{kind}", "message": "ожидается объект {id: {поле: значение}}"})
+            continue
+        table = tables[kind]
+        for key, fields in items.items():
+            k = int(key) if kind == "demand" and str(key).lstrip("-").isdigit() else key
+            if k not in table:
+                errors.append({"path": f"overrides.{kind}.{key}", "message": f"нет такого элемента; есть {', '.join(map(str, table))}"})
+                continue
+            if not isinstance(fields, dict):
+                errors.append({"path": f"overrides.{kind}.{key}", "message": "ожидается объект {поле: значение}"})
+                continue
+            changes = {}
+            for name, value in fields.items():
+                if name not in OVERRIDABLE[kind]:
+                    errors.append({"path": f"overrides.{kind}.{key}.{name}", "message": f"поле нельзя менять; можно {', '.join(OVERRIDABLE[kind])}"})
+                elif isinstance(value, bool) or not isinstance(value, (int, float)) or value != value or value < 0:
+                    errors.append({"path": f"overrides.{kind}.{key}.{name}", "message": f"нужно число не меньше нуля, получено {value!r}"})
+                elif value != getattr(table[k], name):
+                    changes[name] = float(value)
+            if changes:
+                table[k] = replace(table[k], **changes)
+                clean.setdefault(kind, {})[str(key)] = changes
+    if errors or not clean:
+        return case, errors
+    h = hashlib.sha256(json.dumps(clean, sort_keys=True).encode()).hexdigest()[:8]
+    return replace(case, sources=tables["sources"], storages=tables["storages"], demand=tables["demand"],
+                   data_hash=f"{case.data_hash}+{h}", overrides=clean), []
 
 
 def load_assumptions(path: Path | str = CONFIG_DIR / "assumptions.json") -> Assumptions:

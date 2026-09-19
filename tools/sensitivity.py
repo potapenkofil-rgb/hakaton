@@ -19,7 +19,7 @@ SHOCK_YEARS = (2038, 2039, 2040)
 STEPS = {
     "demand": [round(1.0 + 0.05 * i, 2) for i in range(0, 9)],
     "isru": [round(1.0 - 0.05 * i, 2) for i in range(0, 13)],
-    "price": [round(1.0 + 0.1 * i, 2) for i in range(0, 7)],
+    "price": [round(1.0 + 0.05 * i, 2) for i in range(0, 13)],
     "flex_delivery": [round(1.0 - 0.1 * i, 2) for i in range(0, 8)],
 }
 LABELS = {
@@ -79,27 +79,42 @@ def main(argv=None):
     ap.add_argument("plan")
     ap.add_argument("--scenario", default="BASE", help="BASE или MANDATORY_STRESS как отправная точка")
     ap.add_argument("--kinds", nargs="*", default=list(STEPS))
+    ap.add_argument("--against", help="план-альтернатива: печатает его PV рядом и порог, где он становится дешевле")
     ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
     ctx = Context()
     plan_raw = json.load(open(PLANS / f"{args.plan}.json", encoding="utf-8"))
     plan = parse_plan(plan_raw, ctx.case)
+    other = parse_plan(json.load(open(PLANS / f"{args.against}.json", encoding="utf-8")), ctx.case) if args.against else None
     file = {"BASE": "base.yaml", "MANDATORY_STRESS": "mandatory_stress.yaml"}[args.scenario]
     base_raw = parse_yaml((SCENARIO_DIR / file).read_text(encoding="utf-8"))
     rows = []
     print(f"план {args.plan}, отправная точка {args.scenario}")
     for kind in args.kinds:
         boundary = None
+        cheaper = None
         print(f"\n{LABELS[kind]}")
         for value in STEPS[kind]:
-            res = run(ctx, plan, variant(base_raw, kind, value))
-            rows.append({"plan_id": args.plan, "scenario_base": args.scenario, "parameter": kind, "value": value, **res})
+            sc = variant(base_raw, kind, value)
+            res = run(ctx, plan, sc)
+            row = {"plan_id": args.plan, "scenario_base": args.scenario, "parameter": kind, "value": value, **res}
             mark = "исполним" if res["feasible"] else f"НЕТ: {res['first_violation']}"
-            print(f"  {value:5.2f}  PV {res['pv_total_mln']:8.0f}  дефицит {res['shortage_total_t']:6.1f}  резерв {res['min_reserve_days']:4.0f} дн  {mark}")
+            tail = ""
+            if other:
+                alt = run(ctx, other, sc)
+                row[f"pv_{args.against}"] = alt["pv_total_mln"]
+                row[f"feasible_{args.against}"] = alt["feasible"]
+                tail = f"  {args.against}: PV {alt['pv_total_mln']:8.0f} {'исполним' if alt['feasible'] else 'НЕТ'}"
+                if cheaper is None and alt["feasible"] and alt["pv_total_mln"] < res["pv_total_mln"]:
+                    cheaper = value
+            rows.append(row)
+            print(f"  {value:5.2f}  PV {res['pv_total_mln']:8.0f}  дефицит {res['shortage_total_t']:6.1f}  резерв {res['min_reserve_days']:4.0f} дн  {mark}{tail}")
             if boundary is None and not res["feasible"]:
                 boundary = (value, res["first_violation"])
         print("  граница:", f"{boundary[0]} ({boundary[1]})" if boundary else "в проверенном диапазоне нарушений нет")
-    out = Path(args.out) if args.out else ROOT / "results" / f"sensitivity_{args.plan}_{args.scenario}.csv"
+        if other:
+            print(f"  {args.against} дешевле:", f"с {cheaper}" if cheaper is not None else "нигде в проверенном диапазоне")
+    out = Path(args.out) if args.out else ROOT / "results" / f"sensitivity_{args.plan}_{args.scenario}{'_vs_' + args.against if args.against else ''}.csv"
     with open(out, "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0]))
         w.writeheader()

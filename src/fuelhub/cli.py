@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from . import export
-from .data import CONFIG_DIR, DATA_DIR, ROOT, load_assumptions, load_case
+from .data import CONFIG_DIR, DATA_DIR, ROOT, load_assumptions, load_case, with_overrides
 from .engine import calculate
 from .plan import PlanError, load_plan
 from .scenario import SCENARIO_DIR, load_scenarios
@@ -31,14 +31,20 @@ class Context:
     def plan(self, path):
         return load_plan(path, self.case, self.scenarios)
 
-    def run(self, plan, scenario_id=None):
+    def with_overrides(self, overrides):
+        case, errors = with_overrides(self.case, overrides)
+        if errors:
+            raise PlanError(errors)
+        return case
+
+    def run(self, plan, scenario_id=None, case=None):
         sid = scenario_id or plan.scenario_id
         if sid not in self.scenarios:
             raise PlanError([{"path": "scenario_id", "message": f"неизвестный сценарий {sid}; есть {', '.join(self.scenarios)}"}])
-        return calculate(self.case, self.scenarios[sid], plan, self.assumptions)
+        return calculate(case or self.case, self.scenarios[sid], plan, self.assumptions)
 
-    def compare(self, plan, scenario_ids) -> dict:
-        results = {sid: self.run(plan, sid) for sid in scenario_ids}
+    def compare(self, plan, scenario_ids, case=None) -> dict:
+        results = {sid: self.run(plan, sid, case) for sid in scenario_ids}
         base = scenario_ids[0]
         diff = []
         for year in self.case.years:
@@ -117,6 +123,7 @@ def main(argv=None) -> int:
     ap.add_argument("--data", default=DATA_DIR, help="папка с CSV организаторов")
     ap.add_argument("--scenarios", default=SCENARIO_DIR, help="папка со сценариями")
     ap.add_argument("--assumptions", default=CONFIG_DIR / "assumptions.json")
+    ap.add_argument("--overrides", help="JSON с правками данных: {\"sources\": {\"A\": {\"price\": 6.5}}}")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p = sub.add_parser("calc", help="посчитать план в сценарии")
@@ -166,13 +173,14 @@ def main(argv=None) -> int:
         return 0
 
     try:
+        case = ctx.with_overrides(json.loads(Path(args.overrides).read_text(encoding="utf-8"))) if args.overrides else None
         plan = ctx.plan(args.plan)
         if args.cmd == "validate":
             print(f"план {plan.plan_id} корректен: {len(plan.orders)} заказов, {len(plan.reservations)} броней, "
                   f"{len(plan.investments)} инвестиций, сценарий {plan.scenario_id}")
             return 0
         if args.cmd == "calc":
-            res = ctx.run(plan, args.scenario)
+            res = ctx.run(plan, args.scenario, case)
             if not args.quiet:
                 print_summary(res)
             if args.out:
@@ -180,7 +188,7 @@ def main(argv=None) -> int:
                 print(f"результат записан: {args.out}")
             return 0
         if args.cmd == "compare":
-            cmp = ctx.compare(plan, args.scenario)
+            cmp = ctx.compare(plan, args.scenario, case)
             for sid in args.scenario:
                 print_summary(cmp["results"][sid])
                 print()
@@ -193,7 +201,7 @@ def main(argv=None) -> int:
                 print(f"сравнение записано: {args.out}")
             return 0
         if args.cmd == "export":
-            res = ctx.run(plan, args.scenario)
+            res = ctx.run(plan, args.scenario, case)
             if args.format == "csv":
                 out = export.write_long_csv(res, args.out)
             elif args.format == "xlsx":

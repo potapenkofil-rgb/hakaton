@@ -258,6 +258,7 @@ class Engine:
                 "engine_version": ENGINE_VERSION,
                 "data_hash": case.data_hash,
                 "data_dir": case.data_dir,
+                "overrides": case.overrides,
                 "scenario": scenario.summary(),
                 "assumptions": self.a.to_list(),
                 "plan": plan.to_dict(),

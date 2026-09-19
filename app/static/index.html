@@ -24,7 +24,7 @@
       <a href="#finance">Затраты</a>
       <a href="#compare" id="nav-compare">Сравнение сценариев</a>
       <a href="#plan">Решения плана</a>
-      <a href="#sources">Каналы поставки</a>
+      <a href="#sources">Данные кейса</a>
     </nav>
     <div class="side-foot">ядро <span id="engine"></span> · данные организаторов</div>
   </aside>
@@ -130,8 +130,17 @@
 
     <section id="sources">
       <div class="panel">
-        <h2>Каналы поставки <span class="muted">данные организаторов</span></h2>
+        <div class="panel-head">
+          <h2>Данные кейса <span class="muted">организаторов; числа в полях можно менять</span></h2>
+          <span class="group"><span id="overrides-note" class="muted"></span><button id="btn-reset-data" class="btn ghost">Вернуть исходные</button></span>
+        </div>
+        <p class="muted">Изменённое значение подсвечивается, попадает в расчёт при следующем «Посчитать» и записывается в выгрузку как правка данных. Файлы организаторов не меняются.</p>
+        <h3>Каналы поставки</h3>
         <div class="wrap"><table id="sources-table"></table></div>
+        <h3>Хранилища</h3>
+        <div class="wrap"><table id="storages-table"></table></div>
+        <h3>Спрос по годам, т</h3>
+        <div class="wrap"><table id="demand-table"></table></div>
       </div>
     </section>
   </main>

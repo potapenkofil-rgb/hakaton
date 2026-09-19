@@ -213,10 +213,33 @@ loss_ceiling:               {enabled: true, from_year: 2038, max_losses_divided_
 | Метод | Что делает |
 |---|---|
 | `GET /api/inputs` | данные кейса, список сценариев, список сохранённых планов |
-| `POST /api/calculate` | план (+ `scenario_id`) → результат |
-| `POST /api/compare` | план → результаты в `BASE` и `MANDATORY_STRESS` и разница по годам |
+| `POST /api/calculate` | `{plan, scenario_id, overrides?}` → результат |
+| `POST /api/compare` | `{plan, scenarios?, overrides?}` → результаты по сценариям и разница по годам |
 | `POST /api/plans` / `GET /api/plans/{id}` | сохранить / открыть план (`results/plans/*.json`) |
-| `GET /api/export/{plan_id}?format=csv\|xlsx` | выгрузка |
+| `POST /api/export?format=csv\|xlsx\|json&scenario=…` | `{plan, overrides?}` → файл |
+| `GET /api/export/{plan_id}?format=csv\|xlsx` | выгрузка сохранённого плана |
+
+### Правки данных (`overrides`)
+
+Интерфейс может изменить числа кейса, не трогая файлы организаторов. Поле
+`overrides` в запросе:
+
+```json
+{
+  "sources":  {"A": {"price": 7.0, "capacity": 200, "reservation_rate": 0.5, "top_share": 0.7}},
+  "storages": {"ZBO": {"capacity": 150, "loss_rate": 0.02, "holding_cost": 0.6, "capex": 200, "fixed_opex": 15}},
+  "demand":   {"2040": {"total": 420, "critical": 260}}
+}
+```
+
+Разрешены только эти поля, значения — числа не меньше нуля; неизвестный
+элемент или поле дают `INVALID_PLAN` с путём вида `overrides.sources.A.price`.
+Значения, равные исходным, отбрасываются. Результат несёт правки в
+`meta.overrides`, а `meta.data_hash` получает суффикс `+<хэш правок>`, так что
+расчёт на изменённых данных не спутать с расчётом на данных организаторов.
+В длинной выгрузке правки идут строками `override:sources:A / price`, в XLSX
+на листе `summary` строками `override:sources.A.price`.
 
 То же самое из командной строки: `python -m fuelhub calc plan.json --scenario BASE`,
-`python -m fuelhub export plan.json --format csv`.
+`python -m fuelhub export plan.json --format csv`,
+`python -m fuelhub --overrides правки.json calc plan.json`.

@@ -66,6 +66,10 @@ def long_rows(result: dict) -> list[dict]:
         for k in ("actual", "limit", "excess", "ok"):
             add(c["year"], entity, k, c[k])
     add("", "plan", "feasible", result["feasible"])
+    for kind, items in result.get("meta", {}).get("overrides", {}).items():
+        for key, fields in items.items():
+            for name, value in fields.items():
+                add(key if kind == "demand" else "", f"override:{kind}:{key}", name, value)
     return out
 
 
@@ -161,6 +165,10 @@ def write_xlsx(result: dict, path: Path | str, sheets=None) -> Path:
                     ["assumptions_reference", result["assumptions_reference"]]]
             for k, v in result["units"].items():
                 rows.append([f"unit:{k}", v])
+            for kind, items in result["meta"].get("overrides", {}).items():
+                for key, fields in items.items():
+                    for field, value in fields.items():
+                        rows.append([f"override:{kind}.{key}.{field}", value])
             for w in result.get("warnings", []):
                 rows.append(["warning", w])
         else:

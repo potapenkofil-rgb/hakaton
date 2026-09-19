@@ -82,6 +82,20 @@ def test_context_compare(case):
     assert cmp["violations"]["BASE"] == [] and cmp["violations"]["MANDATORY_STRESS"]
 
 
+def test_cli_overrides(tmp_path, capsys):
+    o = tmp_path / "o.json"
+    o.write_text(json.dumps({"sources": {"A": {"price": 7.0}}}), encoding="utf-8")
+    assert main(["--overrides", str(o), "calc", str(PLAN), "--quiet", "--out", str(tmp_path / "r.json")]) == 0
+    res = json.loads((tmp_path / "r.json").read_text(encoding="utf-8"))
+    assert res["meta"]["overrides"] == {"sources": {"A": {"price": 7.0}}}
+    assert main(["--overrides", str(o), "export", str(PLAN), "--format", "xlsx", "--out", str(tmp_path / "e.xlsx")]) == 0
+    summary = read_xlsx(tmp_path / "e.xlsx")["summary"]
+    assert ["override:sources.A.price", 7.0] in [list(r) for r in summary]
+    o.write_text(json.dumps({"sources": {"A": {"price": "seven"}}}), encoding="utf-8")
+    assert main(["--overrides", str(o), "calc", str(PLAN), "--quiet"]) == 2
+    assert "overrides.sources.A.price" in capsys.readouterr().err
+
+
 def test_cli_calc_and_export(tmp_path, capsys):
     assert main(["calc", str(PLAN), "--out", str(tmp_path / "r.json")]) == 0
     out = capsys.readouterr().out

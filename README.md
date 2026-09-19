@@ -77,6 +77,9 @@ python -m fuelhub export results/plans/base-v1.json --format xlsx --out results/
 `json`); `scenarios` — список сценариев; `inputs` — данные кейса в JSON.
 Невалидный план даёт код возврата 2 и список ошибок с путём до поля.
 Другие папки данных и сценариев: `--data`, `--scenarios`, `--assumptions`.
+Точечные правки чисел кейса без правки файлов: `--overrides правки.json`
+(формат в `docs/CONTRACT.md`), правки попадают в `meta.overrides` результата
+и в выгрузки.
 
 ## Инструменты анализа (`tools/`)
 
@@ -104,7 +107,8 @@ python tools/sensitivity.py v3-earth --scenario BASE
 
 Один параметр за раз (спрос 2038–2040, поставка Lunar-ISRU, поставка Earth-Flex,
 цена Earth-Core и Earth-Flex), ищет границу, где план перестаёт быть исполнимым.
-Пишет `results/sensitivity_<план>_<сценарий>.csv`.
+С `--against v3-lunar` считает рядом альтернативу и печатает порог, с которого
+она дешевле. Пишет `results/sensitivity_<план>_<сценарий>[_vs_<альтернатива>].csv`.
 
 ```bash
 python tools/optimize.py --iters 15000 --seeds 3 --margin 10 --tag v3
@@ -165,7 +169,8 @@ python tools/risks.py
 5. сравнение и выгрузка: `compare`, `export`; готовые файлы — в `results/v3-earth/`,
    `results/v3-earth-response/` и `results/base-v1/`;
 6. расширение данных: `python -m fuelhub calc results/plans/v3-earth.json --data data_ext/horizon_2041`;
-7. интерфейс: `python -m fuelhub serve`, дальше по `docs/UI_TEST.md`.
+7. интерфейс: `python -m fuelhub serve`, дальше по `docs/UI_TEST.md`: там же
+   правка данных кейса (цены, мощности, брони, ёмкость, спрос) прямо на странице.
 
 Границы прототипа: дефицит без цены, вероятности рисков не заявляются, поиск
 плана эвристический, горизонт и каналы расширяются данными, а не кодом

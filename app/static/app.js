@@ -218,7 +218,8 @@ function renderTables(res) {
 function render(res) {
   state.result = res;
   const hard = renderViolations(res);
-  setStatus(`${res.plan_id} · ${SHORT[res.scenario_id] ? `${scenarioName(res.scenario_id).toLowerCase()} сценарий` : `сценарий «${scenarioName(res.scenario_id)}»`}: ${res.feasible ? "план исполним" : `план не исполним, нарушений: ${hard}`}`, res.feasible ? "ok" : "bad");
+  const edited = Object.keys(res.meta.overrides || {}).length ? " · данные изменены" : "";
+  setStatus(`${res.plan_id} · ${SHORT[res.scenario_id] ? `${scenarioName(res.scenario_id).toLowerCase()} сценарий` : `сценарий «${scenarioName(res.scenario_id)}»`}${edited}: ${res.feasible ? "план исполним" : `план не исполним, нарушений: ${hard}`}`, res.feasible ? "ok" : "bad");
   renderSummary(res);
   chartStock(res);
   chartDemand(res);
@@ -267,8 +268,55 @@ function buildEditor() {
   const plan = $("plan");
   plan.addEventListener("input", () => setStatus("План изменён, нажмите «Посчитать»", "wait"));
   plan.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.tagName === "INPUT") calc(); });
-  table($("sources-table"), ["~Канал", "Мощность, т/год", "Цена, млн/т", "Бронь, млн за т", "Take-or-pay", "Срок заказа", "Доступен с", "Надёжность", "~Примечание"],
-    sources.map((s) => [`${s.id} · ${esc(s.name)}`, num(s.capacity, 0), num(s.price, 2), num(s.reservation_rate, 2), pct(s.top_share), `${s.lead_time_min === s.lead_time_max ? s.lead_time_max : `${s.lead_time_min}–${s.lead_time_max}`} ${UNITS[s.lead_time_unit] || s.lead_time_unit}`, s.available_from ?? "после инвестиции", reliability(s.reliability), esc(s.notes)]));
+  buildData();
+}
+
+function ov(kind, id, field, value, step) {
+  return `<input class="ov" type="number" min="0" step="${step}" value="${value}" data-kind="${kind}" data-id="${id}" data-field="${field}" data-orig="${value}">`;
+}
+
+function buildData() {
+  const { years, sources, storages, demand } = state.inputs;
+  table($("sources-table"), ["~Канал", "Мощность, т/год", "Цена, млн/т", "Бронь, млн за т в год", "Take-or-pay, доля", "Срок заказа", "Доступен с", "Надёжность", "~Примечание"],
+    sources.map((s) => [`${s.id} · ${esc(s.name)}`, ov("sources", s.id, "capacity", s.capacity, 1), ov("sources", s.id, "price", s.price, 0.1), ov("sources", s.id, "reservation_rate", s.reservation_rate, 0.01), ov("sources", s.id, "top_share", s.top_share, 0.05), `${s.lead_time_min === s.lead_time_max ? s.lead_time_max : `${s.lead_time_min}–${s.lead_time_max}`} ${UNITS[s.lead_time_unit] || s.lead_time_unit}`, s.available_from ?? "после инвестиции", reliability(s.reliability), esc(s.notes)]));
+  table($("storages-table"), ["~Хранилище", "Ёмкость, т", "Потери, доля прихода", "Хранение, млн за т в год", "CAPEX, млн", "OPEX, млн в год", "Доступно с"],
+    storages.map((s) => [`${s.id} · ${esc(s.name)}`, ov("storages", s.id, "capacity", s.capacity, 1), ov("storages", s.id, "loss_rate", s.loss_rate, 0.001), ov("storages", s.id, "holding_cost", s.holding_cost, 0.01), ov("storages", s.id, "capex", s.capex, 1), ov("storages", s.id, "fixed_opex", s.fixed_opex, 1), s.available_from]));
+  table($("demand-table"), ["~Год", "Базовый спрос", "Критический", "Низкий (справочно)", "Высокий (справочно)"],
+    demand.map((d) => [d.year, ov("demand", d.year, "total", d.total, 1), ov("demand", d.year, "critical", d.critical, 1), num(d.low_total, 0), num(d.high_total, 0)]));
+  $("sources").addEventListener("input", (e) => {
+    if (!e.target.classList.contains("ov")) return;
+    e.target.classList.toggle("changed", Number(e.target.value) !== Number(e.target.dataset.orig));
+    noteOverrides();
+    setStatus("Данные изменены, нажмите «Посчитать»", "wait");
+  });
+  $("btn-reset-data").onclick = () => {
+    document.querySelectorAll("input.ov").forEach((i) => { i.value = i.dataset.orig; i.classList.remove("changed"); });
+    noteOverrides();
+    calc();
+  };
+}
+
+function readOverrides() {
+  const out = {};
+  document.querySelectorAll("input.ov").forEach((i) => {
+    const v = i.value === "" ? NaN : Number(i.value);
+    if (Number.isNaN(v) || v === Number(i.dataset.orig)) return;
+    ((out[i.dataset.kind] ||= {})[i.dataset.id] ||= {})[i.dataset.field] = v;
+  });
+  return out;
+}
+
+function noteOverrides() {
+  const n = document.querySelectorAll("input.ov.changed").length;
+  $("overrides-note").textContent = n ? `изменено значений: ${n}` : "";
+  document.querySelector('.nav a[href="#sources"]').classList.toggle("edited", n > 0);
+}
+
+function request() {
+  const body = { plan: readPlan() };
+  const o = readOverrides();
+  if (Object.keys(o).length) body.overrides = o;
+  return body;
 }
 
 function readPlan() {
@@ -324,7 +372,7 @@ function fillForm(plan) {
 async function calc() {
   setStatus("Считаю…", "wait");
   try {
-    const res = await api("/api/calculate", { plan: readPlan(), scenario_id: state.scenario });
+    const res = await api("/api/calculate", { ...request(), scenario_id: state.scenario });
     showError(null);
     render(res);
   } catch (e) { showError(e); }
@@ -333,7 +381,7 @@ async function calc() {
 async function compare() {
   setStatus("Считаю оба сценария…", "wait");
   try {
-    const cmp = await api("/api/compare", { plan: readPlan(), scenarios: ["BASE", "MANDATORY_STRESS"] });
+    const cmp = await api("/api/compare", { ...request(), scenarios: ["BASE", "MANDATORY_STRESS"] });
     showError(null);
     const ids = cmp.scenarios;
     const rows = [["Исполним", ...ids.map((s) => (cmp.feasible[s] ? "да" : "нет")), ""]];
@@ -404,7 +452,7 @@ function downloadPlan() {
 
 async function exportFile(format) {
   try {
-    const res = await api(`/api/export?format=${format}&scenario=${encodeURIComponent(state.scenario)}`, { plan: readPlan() }, true);
+    const res = await api(`/api/export?format=${format}&scenario=${encodeURIComponent(state.scenario)}`, request(), true);
     const blob = await res.blob();
     const name = (res.headers.get("Content-Disposition") || "").match(/filename="(.+)"/)?.[1] || `export.${format}`;
     const a = document.createElement("a");

@@ -29,6 +29,7 @@ a { color: inherit; text-decoration: none; }
 .nav a { padding: 8px 10px; border-radius: 8px; color: var(--text); }
 .nav a:hover { background: #f0f1f4; }
 .nav a.active { background: #e9edf5; color: var(--ink); font-weight: 500; }
+.nav a.edited::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 8px; border-radius: 50%; background: var(--accent); vertical-align: middle; }
 .side-foot { margin-top: auto; padding: 8px 10px; font-size: 11px; color: var(--muted); }
 
 .content { flex: 1; min-width: 0; padding: 28px 36px 60px; max-width: 1160px; }
@@ -119,6 +120,8 @@ tr.total td { font-weight: 600; color: var(--ink); border-top: 2px solid var(--l
 #compare-table th:first-child, #compare-table td:first-child { padding-right: 32px; }
 
 .grid input { width: 64px; height: 30px; padding: 0 8px; text-align: right; border: 1px solid #d3d6dc; border-radius: 6px; }
+input.ov { width: 76px; height: 28px; padding: 0 8px; text-align: right; border: 1px solid var(--line); border-radius: 6px; }
+input.ov.changed { border-color: var(--accent); background: #eef3fc; }
 .grid input:placeholder-shown { border-color: var(--line); color: var(--muted); }
 .grid th, .grid td { text-align: center; padding: 4px 6px; border-top: 0; }
 .grid th:first-child, .grid td:first-child { text-align: left; white-space: nowrap; }
