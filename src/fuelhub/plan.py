@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .data import CaseData, with_overrides
+from .data import ROOT, CaseData, with_overrides
 
 
 class PlanError(Exception):
@@ -78,6 +78,7 @@ class Plan:
     label: str = ""
     overrides: dict = field(default_factory=dict)
     data_hash: str = ""
+    data_dir: str = ""
 
     def ordered(self, source_id: str, year: int) -> float:
         return sum(o.ordered_t for o in self.orders if o.source_id == source_id and o.year == year)
@@ -109,6 +110,8 @@ class Plan:
             d["data_overrides"] = self.overrides
         if self.data_hash:
             d["data_hash"] = self.data_hash
+        if self.data_dir:
+            d["data_dir"] = self.data_dir
         return d
 
 
@@ -170,6 +173,10 @@ def parse_plan(raw: dict, case: CaseData, scenario_ids=None) -> Plan:
     scenario_id = raw.get("scenario_id")
     if not isinstance(scenario_id, str) or not scenario_id.strip():
         c.fail("scenario_id", "нужна непустая строка")
+    need = raw.get("data_dir")
+    if need and (ROOT / str(need)).resolve() != Path(case.data_dir).resolve():
+        raise PlanError([{"path": "data_dir", "message": f"план рассчитан на копию данных {need}, а загружены {Path(case.data_dir).name}: "
+                          f"добавьте --data {need} к команде или запустите сервер с --data {need}"}])
     decisions = raw.get("decisions")
     if not isinstance(decisions, dict):
         c.fail("decisions", "нужен объект с supply_orders, capacity_reservations, investments, inventory_policy")
@@ -287,7 +294,7 @@ def parse_plan(raw: dict, case: CaseData, scenario_ids=None) -> Plan:
         if errors:
             raise PlanError([{"path": d["path"].replace("overrides", "data_overrides", 1), "message": d["message"]} for d in errors])
     return Plan(plan_id.strip(), scenario_id.strip(), tuple(orders), tuple(reservations), tuple(investments),
-                inventory, str(raw.get("label", "")), overrides, str(raw.get("data_hash") or ""))
+                inventory, str(raw.get("label", "")), overrides, str(raw.get("data_hash") or ""), str(raw.get("data_dir") or ""))
 
 
 def load_plan(path: Path | str, case: CaseData, scenario_ids=None) -> Plan:

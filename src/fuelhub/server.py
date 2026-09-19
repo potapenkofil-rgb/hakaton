@@ -31,7 +31,7 @@ def list_plans() -> list[dict]:
         try:
             raw = json.loads(p.read_text(encoding="utf-8"))
             out.append({"plan_id": raw.get("plan_id", p.stem), "label": raw.get("label", ""),
-                        "scenario_id": raw.get("scenario_id", ""), "file": p.name})
+                        "scenario_id": raw.get("scenario_id", ""), "file": p.name, "data_dir": raw.get("data_dir", "")})
         except (json.JSONDecodeError, UnicodeDecodeError):
             out.append({"plan_id": p.stem, "label": "файл повреждён", "scenario_id": "", "file": p.name})
     return out

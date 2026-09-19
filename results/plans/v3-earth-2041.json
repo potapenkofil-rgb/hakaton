@@ -1,6 +1,8 @@
 {
   "plan_id": "v3-earth-2041",
   "scenario_id": "TEAM_HORIZON_2041",
+  "label": "v3-earth, продолженный на 2041 год (данные data_ext/horizon_2041)",
+  "data_dir": "data_ext/horizon_2041",
   "decisions": {
     "supply_orders": [
       {
@@ -203,6 +205,5 @@
       "initial_stock_cost_mln": 133.5,
       "storage_id": "BASE"
     }
-  },
-  "label": "v3-earth, продолженный на 2041 год (данные data_ext/horizon_2041)"
+  }
 }

@@ -527,7 +527,7 @@ async function compare() {
 }
 
 function renderPlanList(plans, selected) {
-  $("plan-list").innerHTML = plans.map((p) => `<option value="${esc(p.file.replace(/\.json$/, ""))}" ${p.plan_id === selected ? "selected" : ""}>${esc(p.plan_id)}</option>`).join("");
+  $("plan-list").innerHTML = plans.map((p) => `<option value="${esc(p.file.replace(/\.json$/, ""))}" ${p.plan_id === selected ? "selected" : ""}>${esc(p.plan_id)}${p.data_dir ? ` (данные ${esc(p.data_dir)})` : ""}</option>`).join("");
 }
 
 async function save() {
