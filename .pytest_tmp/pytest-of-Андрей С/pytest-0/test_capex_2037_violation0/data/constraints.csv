@@ -1,3 +1,0 @@
-constraint_id,metric,operator,value,unit,period,scenario,severity,status,description
-CAPEX_2037,cumulative_capex,<=,1800,mln,through_2037,ALL,hard,SYNTHETIC,
-CAPEX_2040,cumulative_capex,<=,2800,mln,through_2040,ALL,hard,SYNTHETIC,

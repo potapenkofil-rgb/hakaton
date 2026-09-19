@@ -1,1 +1,0 @@
-{"plan_id": "x", "scenario_id": "BASE", "decisions": {"supply_orders": [{"source_id": "Q", "year": 2035, "ordered_t": 1}], "capacity_reservations": [], "investments": [], "inventory_policy": {}}}

@@ -1,2 +1,0 @@
-source_id,name,capacity_t_per_year,variable_cost_mln_per_t,reservation_rate_mln_per_t_year_capacity,take_or_pay_share,lead_time_min_value,lead_time_max_value,lead_time_unit,reliability_profile,available_from_year,status,notes
-X,Source-X,100,2,0,0,1,1,month,constant:0.80,2035,SYNTHETIC,

@@ -1,3 +1,0 @@
-storage_id,name,capacity_t,loss_rate_on_throughput,holding_cost_mln_per_t_year,capex_mln,fixed_opex_mln_per_year,available_from_year,status,notes
-BASE,Base,1000,0.05,0,0,0,2035,SYNTHETIC,
-ZBO,ZBO,2000,0.01,0,10,1,2036,SYNTHETIC,
