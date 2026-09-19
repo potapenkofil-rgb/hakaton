@@ -322,7 +322,10 @@ function buildEditor() {
   yearOptions($("en-exercise"), years, 2036);
   yearOptions($("zbo-year"), years, 2037);
   $("isru-years").innerHTML = years.map((y) => `<label><input type="checkbox" class="isru-year" value="${y}">${y}</label>`).join("");
-  $("init-source").innerHTML = sources.map((s) => `<option value="${s.id}">${s.id} · ${esc(s.name)}, ${num(s.price, 2)} млн/т</option>`).join("");
+  const open = sources.filter((s) => s.available_from != null && s.available_from <= years[0]);
+  $("init-source").innerHTML = open.map((s) => `<option value="${s.id}">${s.id} · ${esc(s.name)}</option>`).join("");
+  $("init-source").addEventListener("change", initCost);
+  $("init-stock").addEventListener("input", initCost);
   const own = scenarios.filter((s) => !isTeam(s.scenario_id));
   const team = scenarios.filter((s) => isTeam(s.scenario_id));
   $("scenario").innerHTML = own.map((s) => `<button type="button" data-id="${s.scenario_id}" title="${esc(s.label)} (${s.scenario_id})">${scenarioName(s.scenario_id)}</button>`).join("");
@@ -342,12 +345,37 @@ function ov(kind, id, field, value, step) {
   return `<input class="ov" type="number" min="0" step="${step}" value="${value}" data-kind="${kind}" data-id="${id}" data-field="${field}" data-orig="${value}">`;
 }
 
+function current(kind, id, field) {
+  const el = document.querySelector(`input.ov[data-kind="${kind}"][data-id="${id}"][data-field="${field}"]`);
+  const v = el && el.value !== "" ? Number(el.value) : NaN;
+  if (!Number.isNaN(v)) return v;
+  const row = (state.inputs[kind] || []).find((r) => String(r.id ?? r.year) === String(id));
+  return row ? row[field] : 0;
+}
+
+function initCost() {
+  const stock = Number($("init-stock").value || 0);
+  const price = current("sources", $("init-source").value, "price");
+  $("init-cost").value = Math.round(stock * price * 1e6) / 1e6;
+  $("init-source").title = `${num(price, 2)} млн/т`;
+}
+
+function hints() {
+  if (!state.inputs.storages.some((s) => s.id === "ZBO")) return;
+  $("zbo-capex").textContent = num(current("storages", "ZBO", "capex"), 0);
+  $("zbo-hint").textContent = `бак ${num(current("storages", "ZBO", "capacity"), 0)} т, потери ${pct(current("storages", "ZBO", "loss_rate"))}, ${num(current("storages", "ZBO", "fixed_opex"), 0)} млн в год`;
+}
+
 function buildData() {
   const { years, sources, storages, demand } = state.inputs;
   table($("sources-table"), ["~Канал", "Мощность, т/год", "Цена, млн/т", "Бронь, млн за т в год", "Take-or-pay, доля", "~Срок заказа", "~Доступен с", "~Надёжность", "~Примечание"],
     sources.map((s) => [`${s.id} · ${esc(s.name)}`, ov("sources", s.id, "capacity", s.capacity, 1), ov("sources", s.id, "price", s.price, 0.1), ov("sources", s.id, "reservation_rate", s.reservation_rate, 0.01), ov("sources", s.id, "top_share", s.top_share, 0.05), `${s.lead_time_min === s.lead_time_max ? s.lead_time_max : `${s.lead_time_min}–${s.lead_time_max}`} ${UNITS[s.lead_time_unit] || s.lead_time_unit}`, s.available_from ?? "после инвестиции", reliability(s.reliability), esc(s.notes)]));
   table($("storages-table"), ["~Хранилище", "Ёмкость, т", "Потери, доля прихода", "Хранение, млн за т в год", "CAPEX, млн", "OPEX, млн в год", "Доступно с"],
-    storages.map((s) => [`${s.id} · ${esc(s.name)}`, ov("storages", s.id, "capacity", s.capacity, 1), ov("storages", s.id, "loss_rate", s.loss_rate, 0.001), ov("storages", s.id, "holding_cost", s.holding_cost, 0.01), ov("storages", s.id, "capex", s.capex, 1), ov("storages", s.id, "fixed_opex", s.fixed_opex, 1), s.available_from]));
+    storages.map((s) => {
+      const invest = s.capex > 0 || s.available_from > years[0];
+      return [`${s.id} · ${esc(s.name)}`, ov("storages", s.id, "capacity", s.capacity, 1), ov("storages", s.id, "loss_rate", s.loss_rate, 0.001), ov("storages", s.id, "holding_cost", s.holding_cost, 0.01),
+        invest ? ov("storages", s.id, "capex", s.capex, 1) : num(s.capex, 0), invest ? ov("storages", s.id, "fixed_opex", s.fixed_opex, 1) : num(s.fixed_opex, 0), s.available_from];
+    }));
   table($("demand-table"), ["~Год", "Базовый спрос", "Критический", "Низкий (справочно)", "Высокий (справочно)"],
     demand.map((d) => [d.year, ov("demand", d.year, "total", d.total, 1), ov("demand", d.year, "critical", d.critical, 1), num(d.low_total, 0), num(d.high_total, 0)]));
   $("sources").addEventListener("input", (e) => {
@@ -357,10 +385,19 @@ function buildData() {
     setStatus("Данные изменены, нажмите «Посчитать»", "wait");
   });
   $("btn-reset-data").onclick = () => {
-    document.querySelectorAll("input.ov").forEach((i) => { i.value = i.dataset.orig; i.classList.remove("changed"); });
-    noteOverrides();
+    applyOverrides({});
     calc();
   };
+  noteOverrides();
+}
+
+function applyOverrides(over) {
+  document.querySelectorAll("input.ov").forEach((i) => {
+    const v = over?.[i.dataset.kind]?.[i.dataset.id]?.[i.dataset.field];
+    i.value = v ?? i.dataset.orig;
+    i.classList.toggle("changed", Number(i.value) !== Number(i.dataset.orig));
+  });
+  noteOverrides();
 }
 
 function readOverrides() {
@@ -375,15 +412,14 @@ function readOverrides() {
 
 function noteOverrides() {
   const n = document.querySelectorAll("input.ov.changed").length;
-  $("overrides-note").textContent = n ? `изменено значений: ${n}` : "";
+  $("overrides-note").textContent = n ? `изменено значений: ${n}, правки сохраняются вместе с планом` : "";
   document.querySelector('.nav a[href="#sources"]').classList.toggle("edited", n > 0);
+  hints();
+  initCost();
 }
 
 function request() {
-  const body = { plan: readPlan() };
-  const o = readOverrides();
-  if (Object.keys(o).length) body.overrides = o;
-  return body;
+  return { plan: readPlan(), overrides: readOverrides() };
 }
 
 function readPlan() {
@@ -398,7 +434,8 @@ function readPlan() {
   if ($("en-on").checked) investments.push({ investment_id: "EARTH_NEW", option_year: Number($("en-option").value), exercise_year: Number($("en-exercise").value) });
   if ($("isru-on").checked) investments.push({ investment_id: "LUNAR_ISRU", financing_years: [...document.querySelectorAll(".isru-year:checked")].map((e) => Number(e.value)) });
   if ($("zbo-on").checked) investments.push({ investment_id: "ZBO", year: Number($("zbo-year").value) });
-  return {
+  initCost();
+  const plan = {
     plan_id: $("plan-id").value.trim() || "plan",
     scenario_id: state.scenario,
     decisions: {
@@ -407,12 +444,16 @@ function readPlan() {
       investments,
       inventory_policy: {
         initial_stock_t: Number($("init-stock").value || 0),
-        initial_stock_cost_mln: Number($("init-cost").value || 0),
         initial_stock_source_id: $("init-source").value,
+        initial_stock_cost_mln: Number($("init-cost").value || 0),
         storage_id: "BASE",
       },
     },
   };
+  const over = readOverrides();
+  if (Object.keys(over).length) plan.data_overrides = over;
+  plan.data_hash = state.inputs.data_hash;
+  return plan;
 }
 
 function fillForm(plan) {
@@ -432,8 +473,9 @@ function fillForm(plan) {
   if (inv.ZBO) $("zbo-year").value = inv.ZBO.year;
   const ip = d.inventory_policy || {};
   $("init-stock").value = ip.initial_stock_t ?? 0;
-  $("init-cost").value = ip.initial_stock_cost_mln ?? 0;
   if (ip.initial_stock_source_id) $("init-source").value = ip.initial_stock_source_id;
+  applyOverrides(plan.data_overrides || {});
+  if (plan.data_hash && plan.data_hash !== state.inputs.data_hash) setStatus(`План сохранён для данных ${plan.data_hash}, сейчас загружены ${state.inputs.data_hash}`, "wait");
 }
 
 async function calc({ scrollToResults = false } = {}) {
@@ -490,7 +532,7 @@ function renderPlanList(plans, selected) {
 
 async function save() {
   try {
-    const r = await api("/api/plans", { plan: readPlan() });
+    const r = await api("/api/plans", request());
     showError(null);
     renderPlanList(r.plans, r.plan_id);
     setStatus(`Сохранено: results/plans/${r.saved}`, "ok");

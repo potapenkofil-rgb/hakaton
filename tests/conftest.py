@@ -46,6 +46,9 @@ def make_plan(orders=None, reservations=None, investments=None, inventory=None, 
 
     inv = {"initial_stock_t": 0, "initial_stock_cost_mln": 0, "storage_id": "BASE"}
     inv.update(inventory or {})
+    if inv["initial_stock_t"] and "initial_stock_cost_mln" not in (inventory or {}):
+        inv.pop("initial_stock_cost_mln")
+        inv.setdefault("initial_stock_source_id", "A")
     return {
         "plan_id": plan_id,
         "scenario_id": scenario_id,

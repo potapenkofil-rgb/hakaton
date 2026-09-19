@@ -234,3 +234,4 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
   .compare-summary { grid-template-columns: 1fr; }
   .panel { padding: 16px; }
 }
+input[readonly] { background: var(--side); color: var(--muted); }

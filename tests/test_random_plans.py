@@ -26,7 +26,7 @@ def random_plan(rnd: random.Random, case) -> dict:
         investments.append({"investment_id": "LUNAR_ISRU", "financing_years": sorted(rnd.sample(YEARS, n))})
     if rnd.random() < 0.6:
         investments.append({"investment_id": "ZBO", "year": rnd.choice(YEARS)})
-    inv = {"initial_stock_t": round(rnd.uniform(0, 80), 2), "initial_stock_cost_mln": round(rnd.uniform(0, 500), 1), "storage_id": "BASE"}
+    inv = {"initial_stock_t": round(rnd.uniform(0, 80), 2), "initial_stock_source_id": rnd.choice(["A", "B"]), "storage_id": "BASE"}
     return make_plan(orders=orders, reservations=reservations, investments=investments, inventory=inv, plan_id=f"rnd-{rnd.random():.6f}")
 
 

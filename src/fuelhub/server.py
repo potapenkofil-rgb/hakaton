@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import mimetypes
 import re
+import traceback
+from dataclasses import replace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -42,19 +44,28 @@ class Api:
     def inputs(self) -> dict:
         return inputs_payload(self.ctx) | {"plans": list_plans(), "plans_dir": str(PLANS_DIR)}
 
+    def prepare(self, body):
+        if not isinstance(body, dict):
+            raise PlanError([{"path": "", "message": "тело запроса должно быть объектом JSON"}])
+        raw = body.get("plan", body)
+        if not isinstance(raw, dict):
+            raise PlanError([{"path": "plan", "message": "план должен быть объектом JSON"}])
+        overrides = body["overrides"] if "overrides" in body else raw.get("data_overrides")
+        case = self.ctx.with_overrides(overrides)
+        plan = parse_plan(raw, case)
+        return case, replace(plan, overrides=case.overrides)
+
     def calculate(self, body: dict) -> dict:
-        case = self.ctx.with_overrides(body.get("overrides"))
-        plan = parse_plan(body.get("plan", body), case)
+        case, plan = self.prepare(body)
         return self.ctx.run(plan, body.get("scenario_id"), case)
 
     def compare(self, body: dict) -> dict:
-        case = self.ctx.with_overrides(body.get("overrides"))
-        plan = parse_plan(body.get("plan", body), case)
+        case, plan = self.prepare(body)
         return self.ctx.compare(plan, body.get("scenarios") or ["BASE", "MANDATORY_STRESS"], case)
 
     def save(self, body: dict) -> dict:
-        plan = parse_plan(body.get("plan", body), self.ctx.case)
-        path = save_plan(plan, PLANS_DIR / f"{safe_id(plan.plan_id)}.json")
+        _, plan = self.prepare(body)
+        path = save_plan(replace(plan, data_hash=self.ctx.case.data_hash), PLANS_DIR / f"{safe_id(plan.plan_id)}.json")
         return {"saved": path.name, "plan_id": plan.plan_id, "plans": list_plans()}
 
     def load(self, name: str) -> dict:
@@ -64,8 +75,7 @@ class Api:
         return json.loads(path.read_text(encoding="utf-8"))
 
     def export(self, body: dict, fmt: str, scenario_id: str | None) -> tuple[bytes, str, str]:
-        case = self.ctx.with_overrides(body.get("overrides"))
-        plan = parse_plan(body.get("plan", body), case)
+        case, plan = self.prepare(body)
         res = self.ctx.run(plan, scenario_id or body.get("scenario_id"), case)
         name = f"{safe_id(plan.plan_id)}_{res['scenario_id']}"
         tmp = RESULTS_DIR / "exports"
@@ -135,6 +145,9 @@ def make_handler(api: Api):
                 return self.send_json(e.to_dict(), 400)
             except KeyError as e:
                 return self.send_json({"error": "NOT_FOUND", "message": f"нет такого плана: {e}"}, 404)
+            except Exception as e:
+                traceback.print_exc()
+                return self.send_json({"error": "INTERNAL", "message": f"{type(e).__name__}: {e}"}, 500)
 
         def do_POST(self):
             url = urlparse(self.path)
@@ -153,6 +166,9 @@ def make_handler(api: Api):
                 return self.send_json({"error": "NOT_FOUND", "message": f"нет такого пути: {url.path}"}, 404)
             except PlanError as e:
                 return self.send_json(e.to_dict(), 400)
+            except Exception as e:
+                traceback.print_exc()
+                return self.send_json({"error": "INTERNAL", "message": f"{type(e).__name__}: {e}"}, 500)
 
         def static(self, path: str):
             rel = "index.html" if path in ("", "/") else path.lstrip("/")

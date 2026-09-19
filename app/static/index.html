@@ -121,13 +121,13 @@
         <div class="stack">
           <label><input type="checkbox" id="en-on"> Earth-New: опцион в <select id="en-option"></select> исполнение в <select id="en-exercise"></select> <span class="muted">90 + 270 млн, мощность через 24 месяца</span></label>
           <label><input type="checkbox" id="isru-on"> Lunar-ISRU: 1250 млн по годам <span id="isru-years" class="years"></span> <span class="muted">оплатить до 2037, потом 70 млн в год</span></label>
-          <label><input type="checkbox" id="zbo-on"> ZBO: 180 млн в <select id="zbo-year"></select> <span class="muted">бак 120 т, потери 1,2 %, 12 млн в год</span></label>
+          <label><input type="checkbox" id="zbo-on"> ZBO: <span id="zbo-capex">180</span> млн в <select id="zbo-year"></select> <span id="zbo-hint" class="muted">бак 120 т, потери 1,2 %, 12 млн в год</span></label>
         </div>
         <h3>Запас на 1 января 2035</h3>
         <div class="stack row">
           <label>Тонн <input id="init-stock" type="number" min="0" step="0.1"></label>
-          <label>Стоимость, млн <input id="init-cost" type="number" min="0" step="0.1"></label>
           <label>Откуда <select id="init-source"></select></label>
+          <label>Стоимость, млн <input id="init-cost" type="number" readonly title="тонны × цена выбранного канала"></label>
         </div>
         <p class="panel-foot"><button id="btn-calc-2" class="btn primary">Посчитать</button></p>
         <div id="calc-error" class="error hidden" role="alert"></div>

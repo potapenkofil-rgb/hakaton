@@ -83,6 +83,9 @@ class Engine:
         fixed: dict[int, float] = {y: 0.0 for y in self.years}
         checks: list[dict] = []
         warnings: list[str] = []
+        base_hash = case.data_hash.split("+")[0]
+        if plan.data_hash and plan.data_hash != base_hash:
+            warnings.append(f"план сохранён для данных {plan.data_hash}, сейчас загружены {base_hash}: проверьте, что исходные CSV те же")
 
         for sid, s in case.sources.items():
             if s.available_from is not None and sid != "D":
@@ -133,17 +136,17 @@ class Engine:
         storage_switch = None
         zbo = plan.investment("ZBO")
         if zbo is not None:
-            inv = case.investments["ZBO"]
             st = case.storages["ZBO"]
-            capex[zbo.year] += inv.exercise_cost
+            capex[zbo.year] += st.capex
             if zbo.year < st.available_from:
                 checks.append(check_row("INVESTMENT_NOT_AVAILABLE", zbo.year, "zbo_year", ">=", st.available_from, zbo.year, "год",
                                         reason=f"ZBO доступна с {st.available_from}, в плане {zbo.year}; хранилище остаётся базовым"))
             else:
                 storage_switch = self.month_index(zbo.year)
-                for y in self.years:
-                    if y >= zbo.year:
-                        fixed[y] += inv.fixed_opex
+        base_storage = case.storages[plan.inventory.storage_id]
+        for y in self.years:
+            active = case.storages["ZBO"] if storage_switch is not None and self.month_index(y) >= storage_switch else base_storage
+            fixed[y] += active.fixed_opex
 
         return Availability(from_month, reasons, storage_switch, capex, fixed, checks, warnings)
 

@@ -45,6 +45,17 @@ def test_sensitivity_variant_touches_only_shock_years():
     v2 = sensitivity.variant(raw, "isru", 0.5)
     assert v2["actual_delivery_share"]["Lunar-ISRU"]["2038"] == pytest.approx(0.5)
     assert v["status"] == "TEAM_ASSUMPTION"
+    assert v["constraint_profile"] == "BASE"
+    stress = parse_yaml((SCENARIO_DIR / "mandatory_stress.yaml").read_text(encoding="utf-8"))
+    assert sensitivity.variant(stress, "flex_delivery", 0.8)["constraint_profile"] == "MANDATORY_STRESS"
+
+
+def test_sensitivity_keeps_service_rules(ctx):
+    from fuelhub.plan import parse_plan
+    raw = parse_yaml((SCENARIO_DIR / "base.yaml").read_text(encoding="utf-8"))
+    plan = parse_plan(load("v3-earth"), ctx.case)
+    res = sensitivity.run(ctx, plan, sensitivity.variant(raw, "demand", 1.05))
+    assert res["feasible"] is False and res["first_violation"].startswith("BASE_TOTAL_SERVICE")
 
 
 def test_sensitivity_run_matches_engine(ctx):
@@ -61,6 +72,11 @@ def test_compare_row(ctx):
     assert r["feasible"] is False
     assert "RESERVE_45D 2039" in r["violations"]
     assert set(compare_plans.COLUMNS) == set(r)
+    assert r["discount_rate"] == 0.08
+    compare_plans.with_rate(ctx, 0.0)
+    flat = compare_plans.row(ctx, load("v3-earth"), "BASE")
+    assert flat["pv_total_mln"] == pytest.approx(flat["total_cost_mln"])
+    compare_plans.with_rate(ctx, 0.08)
 
 
 def test_optimizer_plan_roundtrip(ctx):

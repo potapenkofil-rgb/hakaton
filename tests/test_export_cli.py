@@ -96,6 +96,27 @@ def test_cli_overrides(tmp_path, capsys):
     assert "overrides.sources.A.price" in capsys.readouterr().err
 
 
+def test_cli_global_options_after_subcommand(tmp_path, capsys):
+    o = tmp_path / "o.json"
+    o.write_text(json.dumps({"sources": {"A": {"price": 7.0}}}), encoding="utf-8")
+    assert main(["calc", str(PLAN), "--overrides", str(o), "--quiet", "--out", str(tmp_path / "a.json")]) == 0
+    assert main(["--overrides", str(o), "calc", str(PLAN), "--quiet", "--out", str(tmp_path / "b.json")]) == 0
+    a, b = (json.loads((tmp_path / f).read_text(encoding="utf-8")) for f in ("a.json", "b.json"))
+    assert a["totals"] == b["totals"] and a["meta"]["overrides"] == {"sources": {"A": {"price": 7.0}}}
+    assert main(["calc", str(PLAN), "--data", str(ROOT / "data_ext" / "loss_2pct"), "--quiet", "--out", str(tmp_path / "c.json")]) == 0
+    assert json.loads((tmp_path / "c.json").read_text(encoding="utf-8"))["meta"]["data_dir"].endswith("loss_2pct")
+
+
+def test_cli_plan_with_saved_overrides(tmp_path):
+    raw = json.loads(PLAN.read_text(encoding="utf-8"))
+    raw["data_overrides"] = {"sources": {"A": {"price": 7.0}}}
+    p = tmp_path / "ov.json"
+    p.write_text(json.dumps(raw), encoding="utf-8")
+    assert main(["calc", str(p), "--quiet", "--out", str(tmp_path / "r.json")]) == 0
+    res = json.loads((tmp_path / "r.json").read_text(encoding="utf-8"))
+    assert res["meta"]["overrides"] == {"sources": {"A": {"price": 7.0}}} and "+" in res["meta"]["data_hash"]
+
+
 def test_cli_calc_and_export(tmp_path, capsys):
     assert main(["calc", str(PLAN), "--out", str(tmp_path / "r.json")]) == 0
     out = capsys.readouterr().out

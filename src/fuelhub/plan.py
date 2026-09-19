@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
-from .data import CaseData
+from .data import CaseData, with_overrides
 
 
 class PlanError(Exception):
@@ -76,6 +76,8 @@ class Plan:
     investments: tuple[InvestmentDecision, ...]
     inventory: InventoryPolicy
     label: str = ""
+    overrides: dict = field(default_factory=dict)
+    data_hash: str = ""
 
     def ordered(self, source_id: str, year: int) -> float:
         return sum(o.ordered_t for o in self.orders if o.source_id == source_id and o.year == year)
@@ -103,6 +105,10 @@ class Plan:
         }
         if self.label:
             d["label"] = self.label
+        if self.overrides:
+            d["data_overrides"] = self.overrides
+        if self.data_hash:
+            d["data_hash"] = self.data_hash
         return d
 
 
@@ -148,7 +154,7 @@ class _Checker:
         if sid is None:
             self.fail(f"{path}.source_id", "поле обязательно")
             return None
-        if sid not in self.case.sources:
+        if not isinstance(sid, str) or sid not in self.case.sources:
             self.fail(f"{path}.source_id", f"неизвестный канал {sid}; есть {', '.join(self.case.sources)}")
             return None
         return sid
@@ -245,19 +251,43 @@ def parse_plan(raw: dict, case: CaseData, scenario_ids=None) -> Plan:
 
     ip = decisions["inventory_policy"]
     path = "decisions.inventory_policy"
-    stock = c.number(ip, "initial_stock_t", path, required=False)
+    stock = c.number(ip, "initial_stock_t", path, required=False) or 0.0
     cost = c.number(ip, "initial_stock_cost_mln", path, required=False)
     src = ip.get("initial_stock_source_id")
-    if src is not None and src not in case.sources:
+    first = case.first_year
+    open_sources = {sid: s for sid, s in case.sources.items() if s.available_from is not None and s.available_from <= first}
+    if src is not None and (not isinstance(src, str) or src not in case.sources):
         c.fail(f"{path}.initial_stock_source_id", f"неизвестный канал {src}")
+    elif src is not None and src not in open_sources:
+        c.fail(f"{path}.initial_stock_source_id", f"канал {src} недоступен к 1 января {first}; стартовый запас можно взять у {', '.join(open_sources)}")
+    elif src is not None and stock > 0:
+        expected = round(stock * case.sources[src].price, 6)
+        if cost is None:
+            cost = expected
+        elif abs(cost - expected) > 0.5:
+            c.fail(f"{path}.initial_stock_cost_mln", f"стартовый запас оценивается по цене канала {src}: {stock:g} т × {case.sources[src].price:g} = {expected:g} млн, в плане {cost:g}")
+    elif src is None and stock > 0:
+        floor = round(stock * min(s.price for s in open_sources.values()), 6)
+        if cost is None or cost + 0.5 < floor:
+            c.fail(f"{path}.initial_stock_cost_mln", f"стартовый запас {stock:g} т без канала не может стоить меньше самого дешёвого доступного канала: {floor:g} млн; укажите канал или стоимость")
     storage_id = ip.get("storage_id", "BASE")
-    if storage_id not in case.storages:
-        c.fail(f"{path}.storage_id", f"неизвестное хранилище {storage_id}; есть {', '.join(case.storages)}")
+    if not isinstance(storage_id, str) or storage_id not in case.storages:
+        c.fail(f"{path}.storage_id", f"неизвестное хранилище {storage_id!r}; есть {', '.join(case.storages)}")
+    else:
+        st = case.storages[storage_id]
+        if st.available_from > first or st.capex > 0:
+            c.fail(f"{path}.storage_id", f"хранилище {storage_id} на 1 января {first} недоступно: доступно с {st.available_from}"
+                   f"{' и только после оплаты ' + format(st.capex, 'g') + ' млн' if st.capex > 0 else ''}; укажите базовое хранилище и инвестицию")
     if c.errors:
         raise PlanError(c.errors)
-    inventory = InventoryPolicy(stock or 0.0, src, cost or 0.0, storage_id)
+    inventory = InventoryPolicy(stock, src, cost or 0.0, storage_id)
+    overrides = raw.get("data_overrides") or {}
+    if overrides:
+        _, errors = with_overrides(case, overrides)
+        if errors:
+            raise PlanError([{"path": d["path"].replace("overrides", "data_overrides", 1), "message": d["message"]} for d in errors])
     return Plan(plan_id.strip(), scenario_id.strip(), tuple(orders), tuple(reservations), tuple(investments),
-                inventory, str(raw.get("label", "")))
+                inventory, str(raw.get("label", "")), overrides, str(raw.get("data_hash") or ""))
 
 
 def load_plan(path: Path | str, case: CaseData, scenario_ids=None) -> Plan:

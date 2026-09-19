@@ -37,13 +37,19 @@ class Context:
             raise PlanError(errors)
         return case
 
+    def case_for(self, plan, case=None):
+        if case is not None:
+            return case
+        return self.with_overrides(plan.overrides) if plan.overrides else self.case
+
     def run(self, plan, scenario_id=None, case=None):
         sid = scenario_id or plan.scenario_id
         if sid not in self.scenarios:
             raise PlanError([{"path": "scenario_id", "message": f"неизвестный сценарий {sid}; есть {', '.join(self.scenarios)}"}])
-        return calculate(case or self.case, self.scenarios[sid], plan, self.assumptions)
+        return calculate(self.case_for(plan, case), self.scenarios[sid], plan, self.assumptions)
 
     def compare(self, plan, scenario_ids, case=None) -> dict:
+        case = self.case_for(plan, case)
         results = {sid: self.run(plan, sid, case) for sid in scenario_ids}
         base = scenario_ids[0]
         diff = []
@@ -120,36 +126,38 @@ def main(argv=None) -> int:
     except Exception:
         pass
     ap = argparse.ArgumentParser(prog="fuelhub", description="Расчётное ядро топливного узла 2035–2040")
-    ap.add_argument("--data", default=DATA_DIR, help="папка с CSV организаторов")
-    ap.add_argument("--scenarios", default=SCENARIO_DIR, help="папка со сценариями")
-    ap.add_argument("--assumptions", default=CONFIG_DIR / "assumptions.json")
-    ap.add_argument("--overrides", help="JSON с правками данных: {\"sources\": {\"A\": {\"price\": 6.5}}}")
+    common = argparse.ArgumentParser(add_help=False)
+    for parser, default in ((ap, lambda d: d), (common, lambda d: argparse.SUPPRESS)):
+        parser.add_argument("--data", default=default(DATA_DIR), help="папка с CSV организаторов")
+        parser.add_argument("--scenarios", default=default(SCENARIO_DIR), help="папка со сценариями")
+        parser.add_argument("--assumptions", default=default(CONFIG_DIR / "assumptions.json"))
+        parser.add_argument("--overrides", default=default(None), help="JSON с правками данных: {\"sources\": {\"A\": {\"price\": 6.5}}}")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    p = sub.add_parser("calc", help="посчитать план в сценарии")
+    p = sub.add_parser("calc", help="посчитать план в сценарии", parents=[common])
     p.add_argument("plan")
     p.add_argument("--scenario")
     p.add_argument("--out", help="куда записать результат JSON")
     p.add_argument("--quiet", action="store_true")
 
-    p = sub.add_parser("validate", help="проверить план без расчёта")
+    p = sub.add_parser("validate", help="проверить план без расчёта", parents=[common])
     p.add_argument("plan")
 
-    p = sub.add_parser("compare", help="сравнить сценарии для одного плана")
+    p = sub.add_parser("compare", help="сравнить сценарии для одного плана", parents=[common])
     p.add_argument("plan")
     p.add_argument("--scenario", nargs="+", default=["BASE", "MANDATORY_STRESS"])
     p.add_argument("--out")
 
-    p = sub.add_parser("export", help="выгрузить результат")
+    p = sub.add_parser("export", help="выгрузить результат", parents=[common])
     p.add_argument("plan")
     p.add_argument("--scenario")
     p.add_argument("--format", choices=["csv", "xlsx", "tables", "json"], default="csv")
     p.add_argument("--out", required=True)
 
-    sub.add_parser("scenarios", help="список сценариев")
-    sub.add_parser("inputs", help="данные кейса в JSON")
+    sub.add_parser("scenarios", help="список сценариев", parents=[common])
+    sub.add_parser("inputs", help="данные кейса в JSON", parents=[common])
 
-    p = sub.add_parser("serve", help="запустить веб-интерфейс")
+    p = sub.add_parser("serve", help="запустить веб-интерфейс", parents=[common])
     p.add_argument("--host", default="127.0.0.1")
     p.add_argument("--port", type=int, default=8765)
 

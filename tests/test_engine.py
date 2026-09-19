@@ -372,7 +372,11 @@ def test_capex_2037_violation(case, scenarios, assumptions, tmp_path):
             {"constraint_id": "CAPEX_2040", "metric": "cumulative_capex", "operator": "<=", "value": 2800, "unit": "mln",
              "period": "through_2040", "scenario": "ALL", "severity": "hard", "status": "SYNTHETIC", "description": ""}]
     demand = [{"year": y, "base_total_t": 10, "base_critical_t": 5, "low_total_t": 8, "high_total_t": 12, "status": "S"} for y in YEARS]
-    case2 = synthetic_case(tmp_path, demand=demand, investments=inv, constraints=cons)
+    storages = [{"storage_id": "BASE", "name": "Base", "capacity_t": 1000, "loss_rate_on_throughput": 0.05, "holding_cost_mln_per_t_year": 0,
+                 "capex_mln": 0, "fixed_opex_mln_per_year": 0, "available_from_year": 2035, "status": "S", "notes": ""},
+                {"storage_id": "ZBO", "name": "ZBO", "capacity_t": 2000, "loss_rate_on_throughput": 0.01, "holding_cost_mln_per_t_year": 0,
+                 "capex_mln": 1900, "fixed_opex_mln_per_year": 0, "available_from_year": 2036, "status": "S", "notes": ""}]
+    case2 = synthetic_case(tmp_path, demand=demand, storages=storages, investments=inv, constraints=cons)
     sc = {"BASE": scenario_from_dict({"scenario_id": "BASE"}, case2)}
     res = run(case2, sc, assumptions, make_plan(investments=[{"investment_id": "ZBO", "year": 2037}]))
     bad = failed(res, "CAPEX_2037")
@@ -531,3 +535,27 @@ def test_overrides_are_validated(case):
     assert over is case
     paths = [e["path"] for e in errors]
     assert paths == ["overrides.sources.Z", "overrides.sources.A.name", "overrides.sources.A.price", "overrides.sources.A.capacity", "overrides.demand.2041", "overrides.foo"]
+
+
+CHANGES = [
+    ("sources", "A", "capacity", 90), ("sources", "A", "price", 7.0), ("sources", "A", "reservation_rate", 0.9), ("sources", "A", "top_share", 0.95),
+    ("sources", "B", "capacity", 20), ("sources", "B", "price", 9.5), ("sources", "B", "reservation_rate", 0.3), ("sources", "B", "top_share", 0.8),
+    ("storages", "BASE", "capacity", 20), ("storages", "BASE", "loss_rate", 0.09), ("storages", "BASE", "holding_cost", 2.0),
+    ("storages", "ZBO", "capacity", 60), ("storages", "ZBO", "loss_rate", 0.03), ("storages", "ZBO", "holding_cost", 2.0), ("storages", "ZBO", "capex", 300), ("storages", "ZBO", "fixed_opex", 30),
+    ("demand", "2036", "total", 150), ("demand", "2036", "critical", 100), ("demand", "2040", "total", 420), ("demand", "2040", "critical", 300),
+]
+
+
+@pytest.mark.parametrize("kind,ident,field,value", CHANGES, ids=[f"{k}.{i}.{f}" for k, i, f, _ in CHANGES])
+def test_every_editable_field_changes_result(case, scenarios, assumptions, kind, ident, field, value):
+    from fuelhub.data import with_overrides
+    orders = {"A": {y: 100 for y in YEARS}, "B": {y: 30 for y in YEARS}}
+    reservations = {"A": {y: 150 for y in YEARS}, "B": {y: 60 for y in YEARS}}
+    plan = make_plan(orders=orders, reservations=reservations, investments=[{"investment_id": "ZBO", "year": 2037}], inventory={"initial_stock_t": 30, "initial_stock_source_id": "A"})
+    before = run(case, scenarios, assumptions, plan)
+    over, errors = with_overrides(case, {kind: {ident: {field: value}}})
+    assert not errors
+    after = run(over, scenarios, assumptions, plan)
+    strip = lambda r: {k: v for k, v in r.items() if k != "meta"}
+    assert strip(before) != strip(after)
+    assert after["meta"]["overrides"] == {kind: {ident: {field: float(value)}}}

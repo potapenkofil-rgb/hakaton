@@ -107,8 +107,9 @@ Emergency не более двух лет подряд базовым канал
   стресс не проходит, рекомендуемый план дешевле ручного base-v1, запас по
   резерву стоит меньше 100 PV.
 - `tests/test_tools.py`: инструменты `tools/`: старый ответ нарушает срок
-  реакции, чувствительность меняет только 2038–2040 и совпадает с ядром,
-  оптимизатор возвращает план, который читается ядром.
+  реакции, чувствительность меняет только 2038–2040, наследует профиль
+  проверок исходного сценария и совпадает с ядром, оптимизатор возвращает
+  план, который читается ядром.
 - `tests/test_risks.py`: реестр рисков полный, попадает в результат, каждый
   риск без мер и с мерами ведёт себя как в `docs/RISKS.md`, подготовки не ломают
   стандартный сценарий и укладываются в один план, R6 считается на копии данных.
@@ -140,10 +141,13 @@ python -m fuelhub calc results/plans/v3-earth-response.json --scenario MANDATORY
 python -m fuelhub compare results/plans/v3-earth.json
 python tools/compare_plans.py
 python tools/compare_plans.py --plans v3-earth v3-full v3-lunar base-v1 --scenarios BASE TEAM_LOW_DEMAND TEAM_HIGH_DEMAND MANDATORY_STRESS TEAM_GEO_PRICE --out results/comparison_demand.csv
+python tools/compare_plans.py --plans v3-earth v3-lunar v3-full base-v1 --scenarios BASE --rates 0 0.04 0.06 0.08 0.12 --out results/comparison_rates.csv
 python tools/check_response.py v3-earth v3-earth-response
 python tools/sensitivity.py v3-earth --scenario BASE
 python tools/sensitivity.py v3-earth-response --scenario MANDATORY_STRESS
+python tools/sensitivity.py v3-earth --scenario BASE --kinds price --against v3-lunar
 python tools/risks.py
+python -m fuelhub calc results/plans/v3-earth-2041.json --data data_ext/horizon_2041
 python tools/optimize.py --iters 15000 --seeds 3 --margin 10 --tag v3
 ```
 

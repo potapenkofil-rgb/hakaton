@@ -1,25 +1,44 @@
 plan_id,scenario_base,parameter,value,feasible,hard_violations,pv_total_mln,shortage_total_t,min_reserve_days,first_violation
-v2-earth-response,MANDATORY_STRESS,demand,1.0,True,0,9881.7,1.9,45.0,
-v2-earth-response,MANDATORY_STRESS,demand,1.05,False,2,9853.5,57.1,18.2,RESERVE_45D 2039
-v2-earth-response,MANDATORY_STRESS,demand,1.1,False,2,9836.1,112.3,0.0,RESERVE_45D 2039
-v2-earth-response,MANDATORY_STRESS,demand,1.15,False,3,9829.5,167.5,0.0,RESERVE_45D 2038
-v2-earth-response,MANDATORY_STRESS,demand,1.2,False,3,9826.4,222.7,0.0,RESERVE_45D 2038
-v2-earth-response,MANDATORY_STRESS,demand,1.25,False,3,9824.6,277.9,0.0,RESERVE_45D 2038
-v2-earth-response,MANDATORY_STRESS,demand,1.3,False,3,9823.4,333.1,0.0,RESERVE_45D 2038
-v2-earth-response,MANDATORY_STRESS,demand,1.35,False,3,9822.6,388.3,0.0,RESERVE_45D 2038
-v2-earth-response,MANDATORY_STRESS,demand,1.4,False,3,9822.0,443.5,0.0,RESERVE_45D 2038
-v2-earth-response,MANDATORY_STRESS,flex_delivery,1.0,True,0,9881.7,1.9,45.0,
-v2-earth-response,MANDATORY_STRESS,flex_delivery,0.9,False,1,9774.3,16.3,40.6,RESERVE_45D 2040
-v2-earth-response,MANDATORY_STRESS,flex_delivery,0.8,False,1,9668.0,30.6,35.4,RESERVE_45D 2040
-v2-earth-response,MANDATORY_STRESS,flex_delivery,0.7,False,1,9562.6,44.9,30.1,RESERVE_45D 2040
-v2-earth-response,MANDATORY_STRESS,flex_delivery,0.6,False,1,9457.7,59.2,24.9,RESERVE_45D 2040
-v2-earth-response,MANDATORY_STRESS,flex_delivery,0.5,False,1,9353.3,73.6,19.7,RESERVE_45D 2040
-v2-earth-response,MANDATORY_STRESS,flex_delivery,0.4,False,1,9249.2,87.9,14.5,RESERVE_45D 2040
-v2-earth-response,MANDATORY_STRESS,flex_delivery,0.3,False,1,9145.5,102.2,9.2,RESERVE_45D 2040
-v2-earth-response,MANDATORY_STRESS,price,1.0,True,0,9881.7,1.9,45.0,
-v2-earth-response,MANDATORY_STRESS,price,1.1,True,0,10273.2,1.9,45.0,
-v2-earth-response,MANDATORY_STRESS,price,1.2,True,0,10664.8,1.9,45.0,
-v2-earth-response,MANDATORY_STRESS,price,1.3,True,0,11056.3,1.9,45.0,
-v2-earth-response,MANDATORY_STRESS,price,1.4,True,0,11447.8,1.9,45.0,
-v2-earth-response,MANDATORY_STRESS,price,1.5,True,0,11839.3,1.9,45.0,
-v2-earth-response,MANDATORY_STRESS,price,1.6,True,0,12230.9,1.9,45.0,
+v2-earth-response,MANDATORY_STRESS,demand,1.0,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,demand,1.05,False,2,10160.4,51.5,26.4,RESERVE_45D 2039
+v2-earth-response,MANDATORY_STRESS,demand,1.1,False,2,10140.5,106.7,1.0,RESERVE_45D 2039
+v2-earth-response,MANDATORY_STRESS,demand,1.15,False,2,10130.8,161.9,0.0,RESERVE_45D 2039
+v2-earth-response,MANDATORY_STRESS,demand,1.2,False,2,10126.7,217.1,0.0,RESERVE_45D 2039
+v2-earth-response,MANDATORY_STRESS,demand,1.25,False,2,10124.1,272.3,0.0,RESERVE_45D 2039
+v2-earth-response,MANDATORY_STRESS,demand,1.3,False,2,10122.2,327.5,0.0,RESERVE_45D 2039
+v2-earth-response,MANDATORY_STRESS,demand,1.35,False,2,10120.9,382.7,0.0,RESERVE_45D 2039
+v2-earth-response,MANDATORY_STRESS,demand,1.4,False,2,10119.8,437.9,0.0,RESERVE_45D 2039
+v2-earth-response,MANDATORY_STRESS,isru,1.0,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,isru,0.95,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,isru,0.9,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,isru,0.85,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,isru,0.8,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,isru,0.75,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,isru,0.7,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,isru,0.65,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,isru,0.6,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,isru,0.55,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,isru,0.5,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,isru,0.45,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,isru,0.4,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,price,1.0,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,price,1.05,True,0,10395.0,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,price,1.1,True,0,10599.1,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,price,1.15,True,0,10803.1,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,price,1.2,True,0,11007.2,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,price,1.25,True,0,11211.3,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,price,1.3,True,0,11415.4,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,price,1.35,True,0,11619.4,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,price,1.4,True,0,11823.5,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,price,1.45,True,0,12027.6,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,price,1.5,True,0,12231.6,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,price,1.55,True,0,12435.7,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,price,1.6,True,0,12639.8,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,flex_delivery,1.0,True,0,10190.9,0.0,49.1,
+v2-earth-response,MANDATORY_STRESS,flex_delivery,0.9,True,0,10076.7,10.7,46.2,
+v2-earth-response,MANDATORY_STRESS,flex_delivery,0.8,False,1,9963.7,25.0,42.3,RESERVE_45D 2040
+v2-earth-response,MANDATORY_STRESS,flex_delivery,0.7,False,2,9851.7,39.3,36.3,RESERVE_45D 2039
+v2-earth-response,MANDATORY_STRESS,flex_delivery,0.6,False,2,9740.3,53.6,30.3,RESERVE_45D 2039
+v2-earth-response,MANDATORY_STRESS,flex_delivery,0.5,False,2,9629.5,68.0,24.2,RESERVE_45D 2039
+v2-earth-response,MANDATORY_STRESS,flex_delivery,0.4,False,2,9519.2,82.3,18.2,RESERVE_45D 2039
+v2-earth-response,MANDATORY_STRESS,flex_delivery,0.3,False,2,9409.2,96.6,12.2,RESERVE_45D 2039

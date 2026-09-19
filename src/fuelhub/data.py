@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import math
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
@@ -195,6 +196,10 @@ def load_case(data_dir: Path | str = DATA_DIR) -> CaseData:
         investments[r["investment_id"]] = Investment(
             r["investment_id"], r["name"], _num(r["option_fee_mln"]), _num(r["exercise_cost_mln"]),
             _num(r["total_capex_mln"]), _num(r["fixed_opex_mln_per_year"]), r["commissioning_rule"], r.get("notes", ""))
+    zbo_st, zbo_inv = storages.get("ZBO"), investments.get("ZBO")
+    if zbo_st and zbo_inv and (zbo_st.capex != zbo_inv.total_capex or zbo_st.fixed_opex != zbo_inv.fixed_opex):
+        raise ValueError(f"{d}: ZBO в storage_options.csv ({zbo_st.capex:g} CAPEX, {zbo_st.fixed_opex:g} OPEX) и в investment_options.csv "
+                         f"({zbo_inv.total_capex:g}, {zbo_inv.fixed_opex:g}) расходятся; ядро берёт цифры из storage_options.csv")
     constraints = tuple(
         Constraint(r["constraint_id"], r["metric"], r["operator"], _num(r["value"]), r["unit"],
                    r["period"], r["scenario"], r["severity"], r.get("description", ""))
@@ -212,11 +217,14 @@ OVERRIDABLE = {
     "storages": ("capacity", "loss_rate", "holding_cost", "capex", "fixed_opex"),
     "demand": ("total", "critical"),
 }
+SHARES = {"top_share", "loss_rate"}
 
 
 def with_overrides(case: CaseData, overrides: dict | None) -> tuple[CaseData, list[dict]]:
     if not overrides:
         return case, []
+    if not isinstance(overrides, dict):
+        return case, [{"path": "overrides", "message": "ожидается объект {раздел: {id: {поле: значение}}}"}]
     errors = []
     tables = {"sources": dict(case.sources), "storages": dict(case.storages), "demand": dict(case.demand)}
     clean = {}
@@ -240,13 +248,17 @@ def with_overrides(case: CaseData, overrides: dict | None) -> tuple[CaseData, li
             for name, value in fields.items():
                 if name not in OVERRIDABLE[kind]:
                     errors.append({"path": f"overrides.{kind}.{key}.{name}", "message": f"поле нельзя менять; можно {', '.join(OVERRIDABLE[kind])}"})
-                elif isinstance(value, bool) or not isinstance(value, (int, float)) or value != value or value < 0:
-                    errors.append({"path": f"overrides.{kind}.{key}.{name}", "message": f"нужно число не меньше нуля, получено {value!r}"})
+                elif isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+                    errors.append({"path": f"overrides.{kind}.{key}.{name}", "message": f"нужно конечное число не меньше нуля, получено {value!r}"})
+                elif name in SHARES and value > 1:
+                    errors.append({"path": f"overrides.{kind}.{key}.{name}", "message": f"доля должна быть от 0 до 1, получено {value!r}"})
                 elif value != getattr(table[k], name):
                     changes[name] = float(value)
             if changes:
                 table[k] = replace(table[k], **changes)
                 clean.setdefault(kind, {})[str(key)] = changes
+                if kind == "demand" and table[k].critical > table[k].total:
+                    errors.append({"path": f"overrides.demand.{key}", "message": f"критический спрос {table[k].critical:g} больше общего {table[k].total:g}"})
     if errors or not clean:
         return case, errors
     h = hashlib.sha256(json.dumps(clean, sort_keys=True).encode()).hexdigest()[:8]

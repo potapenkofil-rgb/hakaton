@@ -204,7 +204,12 @@ loss_ceiling:               {enabled: true, from_year: 2038, max_losses_divided_
 
 Что валидируется до расчёта: id канала/инвестиции/хранилища существуют,
 год внутри горизонта, объёмы не отрицательные, `scenario_id` известен,
-план — объект нужной формы. Превышение мощности, брони, ёмкости, CAPEX —
+план — объект нужной формы. Стартовый запас: если указан канал
+`initial_stock_source_id`, он должен быть доступен на 1 января первого года,
+а стоимость равна тоннам × цене канала (при отсутствии заполняется сама);
+без канала стоимость не может быть ниже тонн × цены самого дешёвого
+доступного канала. `storage_id` на старте — только хранилище, доступное с
+первого года и без CAPEX (BASE); ZBO включается инвестицией. Превышение мощности, брони, ёмкости, CAPEX —
 это не ошибка ввода, а нарушение: план считается и попадает в
 `constraint_checks`.
 
@@ -215,7 +220,7 @@ loss_ceiling:               {enabled: true, from_year: 2038, max_losses_divided_
 | `GET /api/inputs` | данные кейса, список сценариев, список сохранённых планов |
 | `POST /api/calculate` | `{plan, scenario_id, overrides?}` → результат |
 | `POST /api/compare` | `{plan, scenarios?, overrides?}` → результаты по сценариям и разница по годам |
-| `POST /api/plans` / `GET /api/plans/{id}` | сохранить / открыть план (`results/plans/*.json`) |
+| `POST /api/plans` / `GET /api/plans/{id}` | сохранить / открыть план (`results/plans/*.json`); в файл попадают `data_overrides` и `data_hash` |
 | `POST /api/export?format=csv\|xlsx\|json&scenario=…` | `{plan, overrides?}` → файл |
 | `GET /api/export/{plan_id}?format=csv\|xlsx` | выгрузка сохранённого плана |
 
@@ -242,4 +247,21 @@ loss_ceiling:               {enabled: true, from_year: 2038, max_losses_divided_
 
 То же самое из командной строки: `python -m fuelhub calc plan.json --scenario BASE`,
 `python -m fuelhub export plan.json --format csv`,
-`python -m fuelhub --overrides правки.json calc plan.json`.
+`python -m fuelhub --overrides правки.json calc plan.json` (флаг можно ставить
+и после команды).
+
+### Правки живут вместе с планом
+
+Сохранённый план — это пакет «решения + правки данных + сценарий + хэш
+данных»: `POST /api/plans` записывает в файл поле `data_overrides` (тот же
+формат, что `overrides`) и `data_hash` данных, для которых план сохранён.
+Открытый план считается с этими правками и без поля `overrides` в запросе:
+CLI, сервер и интерфейс берут их из плана. Явное `overrides` в запросе имеет
+приоритет: `"overrides": {}` считает план на исходных данных. Если
+`data_hash` плана не совпадает с текущими CSV, результат получает строку в
+`warnings`, а интерфейс показывает её в статусе.
+
+Ошибки сервера: тело не объект, план не объект, не JSON — `400 INVALID_PLAN`
+с путём и сообщением; нет такого плана или пути — `404 NOT_FOUND`;
+необработанное исключение — `500 INTERNAL` с типом и текстом, сервер при
+этом не падает.

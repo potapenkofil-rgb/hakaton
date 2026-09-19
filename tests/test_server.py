@@ -119,6 +119,38 @@ def test_save_load_roundtrip(server, base_plan):
     assert call(server, "/api/plans/pytest-tmp-plan")[0] == 404
 
 
+def test_save_keeps_overrides_and_hash(server, base_plan):
+    plan = json.loads(json.dumps(base_plan))
+    plan["plan_id"] = "pytest-tmp-ov"
+    over = {"sources": {"A": {"price": 7.0}}}
+    status, body, _ = call(server, "/api/plans", {"plan": plan, "overrides": over})
+    assert status == 200
+    saved = json.loads((PLANS_DIR / "pytest-tmp-ov.json").read_text(encoding="utf-8"))
+    assert saved["data_overrides"] == over and saved["data_hash"] == Context().case.data_hash
+    status, again, _ = call(server, "/api/plans/pytest-tmp-ov")
+    status, res, _ = call(server, "/api/calculate", {"plan": again})
+    assert status == 200 and res["meta"]["overrides"] == over and "+" in res["meta"]["data_hash"]
+    status, plain, _ = call(server, "/api/calculate", {"plan": again, "overrides": {}})
+    assert plain["meta"]["overrides"] == {} and plain["totals"]["pv_total_mln"] < res["totals"]["pv_total_mln"]
+    again["data_hash"] = "0000000000000000"
+    status, res, _ = call(server, "/api/calculate", {"plan": again})
+    assert status == 200 and any("0000000000000000" in w for w in res["warnings"])
+    (PLANS_DIR / "pytest-tmp-ov.json").unlink()
+
+
+def test_malformed_bodies_get_json_errors(server):
+    status, body, _ = call(server, "/api/calculate", [1, 2, 3])
+    assert status == 400 and body["error"] == "INVALID_PLAN"
+    status, body, _ = call(server, "/api/calculate", {"plan": "v3-earth"})
+    assert status == 400 and body["details"][0]["path"] == "plan"
+    status, body, _ = call(server, "/api/calculate", {"plan": {"plan_id": "x", "scenario_id": "BASE", "decisions": None}})
+    assert status == 400 and body["error"] == "INVALID_PLAN"
+    req = urllib.request.Request(server + "/api/calculate", data=b"{not json", headers={"Content-Type": "application/json"})
+    with pytest.raises(urllib.error.HTTPError) as e:
+        urllib.request.urlopen(req, timeout=10)
+    assert e.value.code == 400 and "JSON" in json.loads(e.value.read())["details"][0]["message"]
+
+
 def test_save_rejects_invalid(server):
     status, body, _ = call(server, "/api/plans", {"plan": make_plan(reservations={"Z": {2035: 1}})})
     assert status == 400 and body["error"] == "INVALID_PLAN"

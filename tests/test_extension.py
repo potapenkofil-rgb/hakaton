@@ -96,3 +96,19 @@ def test_repo_copy_loss_2pct():
     assert loose["totals"]["losses_t"] > tight["totals"]["losses_t"]
     limits = [c for c in loose["constraint_checks"] if c["rule_id"] == "STRESS_LOSS_LIMIT"]
     assert limits and all(c["ok"] for c in limits)
+
+
+def test_continuation_plan_for_2041():
+    ctx = Context(ROOT / "data_ext" / "horizon_2041")
+    plan = ctx.plan(ROOT / "results" / "plans" / "v3-earth-2041.json")
+    base = Context().plan(ROOT / "results" / "plans" / "v3-earth.json")
+    assert [i.to_dict() for i in plan.investments] == [i.to_dict() for i in base.investments]
+    for o in base.orders:
+        if not (o.source_id == "B" and o.year == 2040):
+            assert plan.ordered(o.source_id, o.year) == o.ordered_t
+    res = ctx.run(plan, "TEAM_HORIZON_2041")
+    assert res["feasible"] and res["totals"]["shortage_total_t"] == 0
+    assert year_row(res, "source_schedule", 2041, source_id="X")["delivered_actual_t"] == 60
+    assert res["meta"]["scenario"]["constraint_profile"] == "BASE"
+    old = ctx.run(base, "TEAM_HORIZON_2041")
+    assert not old["feasible"] and year_row(old, "yearly_balance", 2041)["shortage_total_t"] > 400

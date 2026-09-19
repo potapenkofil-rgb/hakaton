@@ -4043,6 +4043,7 @@
         "engine_version": "0.1",
         "data_hash": "09b582c51be772c4",
         "data_dir": "C:\\Users\\potap_fgzvmxm\\OneDrive\\Рабочий стол\\хакатон\\fuel-hub-2035\\data",
+        "overrides": {},
         "scenario": {
           "scenario_id": "BASE",
           "label": "Стандартный сценарий",
@@ -7565,6 +7566,7 @@
         "engine_version": "0.1",
         "data_hash": "09b582c51be772c4",
         "data_dir": "C:\\Users\\potap_fgzvmxm\\OneDrive\\Рабочий стол\\хакатон\\fuel-hub-2035\\data",
+        "overrides": {},
         "scenario": {
           "scenario_id": "MANDATORY_STRESS",
           "label": "Обязательный стрессовый сценарий",

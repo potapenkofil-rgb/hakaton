@@ -6,6 +6,8 @@ import json
 import sys
 from pathlib import Path
 
+sys.stdout.reconfigure(encoding="utf-8")
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
@@ -33,6 +35,7 @@ LABELS = {
 def variant(raw, kind, value):
     r = json.loads(json.dumps(raw))
     r["scenario_id"] = f"SENS_{kind.upper()}_{value}"
+    r["constraint_profile"] = raw.get("constraint_profile") or raw["scenario_id"]
     r["status"] = "TEAM_ASSUMPTION"
     r["label_ru"] = f"{raw.get('label_ru', raw['scenario_id'])}: {LABELS[kind]} = {value}"
     if kind == "demand":

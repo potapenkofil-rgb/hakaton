@@ -55,7 +55,7 @@
 | Reliability | в стандартном сценарии не множитель; в стрессе доли ISRU 0,55 / 0,75 берутся как есть | §11, STRESS_PROTOCOL | `scenario.delivered_share` |
 | Earth-New | опцион 90 в год опциона, исполнение 270 в год исполнения, поставки через 24 месяца после 1 января года исполнения | §12; допущение `earth_new_commissioning_months` | `Engine.availability` |
 | ISRU | 1 250 равными долями по годам финансирования, все до 2038; первая поставка март 2038 | данные; допущение `isru_lead_months` | `Engine.availability` |
-| ZBO | 180 в год оплаты, с 1 января этого года ёмкость 120 т и потери 1,2 % | данные; допущение `zbo_commissioning` | `Engine.availability`, `storage_at` |
+| ZBO | 180 в год оплаты, с 1 января этого года ёмкость 120 т, потери 1,2 % и 12 в год OPEX; все числа из `storage_options.csv`, при расхождении с `investment_options.csv` загрузка данных останавливается с ошибкой | данные; допущение `zbo_commissioning` | `Engine.availability`, `storage_at` |
 | Проверки | все строки `constraints.csv` с их `severity`, плюс технические: мощность, бронь, ёмкость бака, доступность, финансирование ISRU | §13, §14 | `Engine.constraint_checks` |
 
 Каждое допущение команды лежит в `configs/assumptions.json` со статусом,

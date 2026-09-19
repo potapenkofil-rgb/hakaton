@@ -51,8 +51,23 @@ pip install pytest
 python -m pytest
 ```
 
-Все команды ядра — через `python -m fuelhub` из корня репозитория
-(`PYTHONPATH=src`, на Windows `set PYTHONPATH=src`):
+Все команды ядра — через `python -m fuelhub` из корня репозитория. Питону
+нужно показать папку `src`:
+
+```bash
+export PYTHONPATH=src        # bash / macOS / Linux
+```
+
+```powershell
+$env:PYTHONPATH = "src"      # PowerShell
+```
+
+```bat
+set PYTHONPATH=src           # cmd.exe
+```
+
+Без этого можно `pip install -e .` один раз, тогда `python -m fuelhub`
+работает из любой папки. Дальше:
 
 ```bash
 python -m fuelhub calc results/plans/base-v1.json
@@ -76,10 +91,13 @@ python -m fuelhub export results/plans/base-v1.json --format xlsx --out results/
 (`csv` длинного формата, `xlsx`, `tables` — папка с таблицами и `result.json`,
 `json`); `scenarios` — список сценариев; `inputs` — данные кейса в JSON.
 Невалидный план даёт код возврата 2 и список ошибок с путём до поля.
-Другие папки данных и сценариев: `--data`, `--scenarios`, `--assumptions`.
-Точечные правки чисел кейса без правки файлов: `--overrides правки.json`
-(формат в `docs/CONTRACT.md`), правки попадают в `meta.overrides` результата
-и в выгрузки.
+Другие папки данных и сценариев: `--data`, `--scenarios`, `--assumptions`;
+эти флаги можно ставить и до команды, и после неё. Точечные правки чисел кейса
+без правки файлов: `--overrides правки.json` (формат в `docs/CONTRACT.md`),
+правки попадают в `meta.overrides` результата и в выгрузки; план, сохранённый
+из интерфейса с правками, несёт их в поле `data_overrides` и считается с ними
+без флага. В плане есть `data_hash` данных, для которых он сохранён; при
+расхождении с текущими CSV ядро пишет предупреждение в `warnings`.
 
 ## Инструменты анализа (`tools/`)
 
@@ -91,7 +109,8 @@ python tools/compare_plans.py
 
 Все планы из `results/plans` в двух сценариях: статус, PV, дефицит, минимальный
 резерв, список нарушений. Пишет `results/comparison.csv`. Другие планы и
-сценарии: `--plans v3-earth v3-full --scenarios BASE TEAM_HIGH_DEMAND`.
+сценарии: `--plans v3-earth v3-full --scenarios BASE TEAM_HIGH_DEMAND`; другие
+ставки дисконтирования: `--rates 0 0.04 0.08 0.12` (`results/comparison_rates.csv`).
 
 ```bash
 python tools/check_response.py v3-earth v3-earth-response
@@ -106,7 +125,8 @@ python tools/sensitivity.py v3-earth --scenario BASE
 ```
 
 Один параметр за раз (спрос 2038–2040, поставка Lunar-ISRU, поставка Earth-Flex,
-цена Earth-Core и Earth-Flex), ищет границу, где план перестаёт быть исполнимым.
+цена Earth-Core и Earth-Flex), ищет границу, где план перестаёт быть исполнимым;
+производный сценарий наследует профиль проверок исходного.
 С `--against v3-lunar` считает рядом альтернативу и печатает порог, с которого
 она дешевле. Пишет `results/sensitivity_<план>_<сценарий>[_vs_<альтернатива>].csv`.
 
@@ -168,7 +188,8 @@ python tools/risks.py
    реестр рисков `python tools/risks.py`;
 5. сравнение и выгрузка: `compare`, `export`; готовые файлы — в `results/v3-earth/`,
    `results/v3-earth-response/` и `results/base-v1/`;
-6. расширение данных: `python -m fuelhub calc results/plans/v3-earth.json --data data_ext/horizon_2041`;
+6. расширение данных: `python -m fuelhub calc results/plans/v3-earth-2041.json --data data_ext/horizon_2041`
+   (план на 2041 год и новый канал, см. `data_ext/README.md`);
 7. интерфейс: `python -m fuelhub serve`, дальше по `docs/UI_TEST.md`: там же
    правка данных кейса (цены, мощности, брони, ёмкость, спрос) прямо на странице.
 
