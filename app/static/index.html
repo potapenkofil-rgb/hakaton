@@ -4,17 +4,14 @@
 <meta charset="utf-8">
 <title>Топливный космоконтур 2035</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="assets/kosmokontur-logo.png">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="layout">
   <aside class="side">
     <a class="brand" href="#overview">
-      <svg viewBox="0 0 256 256" width="30" height="30" aria-hidden="true">
-        <circle cx="128" cy="128" r="84" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round" stroke-dasharray="430 100" transform="rotate(-60 128 128)"/>
-        <path d="M128,86 C143,107 154,121 154,137 C154,152 142,164 128,164 C114,164 102,152 102,137 C102,121 113,107 128,86 Z" fill="#f2a93b"/>
-      </svg>
-      <span><b>Космоконтур</b><small>топливный узел 2035–2040</small></span>
+      <img src="assets/kosmokontur-logo.png" width="2508" height="627" alt="Космоконтур — топливный узел 2035–2040">
     </a>
     <nav class="nav">
       <a href="#overview">Обзор</a>
@@ -26,7 +23,6 @@
       <a href="#plan">Решения плана</a>
       <a href="#sources">Данные кейса</a>
     </nav>
-    <div class="side-foot">ядро <span id="engine"></span> · данные организаторов</div>
   </aside>
 
   <main class="content">
@@ -69,7 +65,13 @@
       <div class="panel">
         <h2>Спрос и выдача по годам, т</h2>
         <div id="chart-demand" class="chart"></div>
-        <p class="legend"><i class="l-demand"></i>спрос <i class="l-in"></i>приехало <i class="l-served"></i>выдано</p>
+        <div class="legend demand-legend" aria-label="Обозначения графика">
+          <span><i class="l-demand"></i>Спрос</span>
+          <span><i class="l-in"></i>Фактически приехало</span>
+          <span><i class="l-served"></i>Фактически выдано</span>
+          <span><i class="l-short"></i>Дефицит</span>
+        </div>
+        <p class="chart-help">Наведите курсор на столбец или выберите показатель клавишей Tab. Клик, Enter или пробел закрепляют год и выделяют строку баланса. Escape снимает выбор.</p>
       </div>
     </section>
 
@@ -97,6 +99,9 @@
     <section id="compare" class="res hidden">
       <div class="panel">
         <h2>Стандартный и стрессовый сценарии</h2>
+        <div id="compare-summary" class="compare-summary"></div>
+        <div id="compare-delta" class="compare-delta"></div>
+        <h3>Подробные показатели</h3>
         <div class="wrap"><table id="compare-table"></table></div>
       </div>
     </section>
@@ -125,6 +130,7 @@
           <label>Откуда <select id="init-source"></select></label>
         </div>
         <p class="panel-foot"><button id="btn-calc-2" class="btn primary">Посчитать</button></p>
+        <div id="calc-error" class="error hidden" role="alert"></div>
       </div>
     </section>
 
