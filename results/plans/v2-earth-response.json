@@ -1,0 +1,178 @@
+{
+  "plan_id": "v2-earth-response",
+  "scenario_id": "MANDATORY_STRESS",
+  "decisions": {
+    "supply_orders": [
+      {
+        "source_id": "A",
+        "year": 2035,
+        "ordered_t": 95.0
+      },
+      {
+        "source_id": "B",
+        "year": 2035,
+        "ordered_t": 15.0
+      },
+      {
+        "source_id": "A",
+        "year": 2036,
+        "ordered_t": 155.0
+      },
+      {
+        "source_id": "A",
+        "year": 2037,
+        "ordered_t": 190.0
+      },
+      {
+        "source_id": "B",
+        "year": 2037,
+        "ordered_t": 35.0
+      },
+      {
+        "source_id": "A",
+        "year": 2038,
+        "ordered_t": 190.0
+      },
+      {
+        "source_id": "B",
+        "year": 2038,
+        "ordered_t": 30.0
+      },
+      {
+        "source_id": "C",
+        "year": 2038,
+        "ordered_t": 60.0
+      },
+      {
+        "source_id": "A",
+        "year": 2039,
+        "ordered_t": 185.0
+      },
+      {
+        "source_id": "B",
+        "year": 2039,
+        "ordered_t": 45.0
+      },
+      {
+        "source_id": "C",
+        "year": 2039,
+        "ordered_t": 130.0
+      },
+      {
+        "source_id": "E",
+        "year": 2039,
+        "ordered_t": 30.0
+      },
+      {
+        "source_id": "A",
+        "year": 2040,
+        "ordered_t": 190.0
+      },
+      {
+        "source_id": "B",
+        "year": 2040,
+        "ordered_t": 70.0
+      },
+      {
+        "source_id": "C",
+        "year": 2040,
+        "ordered_t": 130.0
+      }
+    ],
+    "capacity_reservations": [
+      {
+        "source_id": "A",
+        "year": 2035,
+        "reserved_capacity_t": 95.0
+      },
+      {
+        "source_id": "B",
+        "year": 2035,
+        "reserved_capacity_t": 15.0
+      },
+      {
+        "source_id": "A",
+        "year": 2036,
+        "reserved_capacity_t": 155.0
+      },
+      {
+        "source_id": "A",
+        "year": 2037,
+        "reserved_capacity_t": 190.0
+      },
+      {
+        "source_id": "B",
+        "year": 2037,
+        "reserved_capacity_t": 45.0
+      },
+      {
+        "source_id": "A",
+        "year": 2038,
+        "reserved_capacity_t": 190.0
+      },
+      {
+        "source_id": "B",
+        "year": 2038,
+        "reserved_capacity_t": 35.0
+      },
+      {
+        "source_id": "C",
+        "year": 2038,
+        "reserved_capacity_t": 60.0
+      },
+      {
+        "source_id": "A",
+        "year": 2039,
+        "reserved_capacity_t": 185.0
+      },
+      {
+        "source_id": "B",
+        "year": 2039,
+        "reserved_capacity_t": 60.0
+      },
+      {
+        "source_id": "C",
+        "year": 2039,
+        "reserved_capacity_t": 130.0
+      },
+      {
+        "source_id": "E",
+        "year": 2039,
+        "reserved_capacity_t": 30.0
+      },
+      {
+        "source_id": "A",
+        "year": 2040,
+        "reserved_capacity_t": 190.0
+      },
+      {
+        "source_id": "B",
+        "year": 2040,
+        "reserved_capacity_t": 70.0
+      },
+      {
+        "source_id": "C",
+        "year": 2040,
+        "reserved_capacity_t": 130.0
+      }
+    ],
+    "investments": [
+      {
+        "investment_id": "EARTH_NEW",
+        "option_year": 2035,
+        "exercise_year": 2036
+      },
+      {
+        "investment_id": "ZBO",
+        "year": 2037
+      }
+    ],
+    "inventory_policy": {
+      "initial_stock_t": 15.0,
+      "initial_stock_source_id": "B",
+      "initial_stock_cost_mln": 133.5,
+      "storage_id": "BASE"
+    }
+  },
+  "label": "ответ на стресс для v2-earth: меняются только Flex и Emergency с 2039"
+}

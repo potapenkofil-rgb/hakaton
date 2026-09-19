@@ -60,6 +60,43 @@ python -m fuelhub export results/plans/base-v1.json --format xlsx --out results/
 Невалидный план даёт код возврата 2 и список ошибок с путём до поля.
 Другие папки данных и сценариев: `--data`, `--scenarios`, `--assumptions`.
 
+## Инструменты анализа (`tools/`)
+
+Запускаются из корня, ядро подключают сами.
+
+```bash
+python tools/compare_plans.py
+```
+
+Все планы из `results/plans` в двух сценариях: статус, PV, дефицит, минимальный
+резерв, список нарушений. Пишет `results/comparison.csv`.
+
+```bash
+python tools/check_response.py v3-earth v3-earth-response
+```
+
+Правило реакции на стресс: ответ отличается от базового плана только заказами
+и бронями Earth-Flex и Emergency с 2039 года, и каждый такой заказ размещается
+после 2038-01, когда стресс уже виден. Печатает изменения и даты «заказать до».
+
+```bash
+python tools/sensitivity.py v3-earth --scenario BASE
+```
+
+Один параметр за раз (спрос 2038–2040, поставка Lunar-ISRU, поставка Earth-Flex,
+цена Earth-Core и Earth-Flex), ищет границу, где план перестаёт быть исполнимым.
+Пишет `results/sensitivity_<план>_<сценарий>.csv`.
+
+```bash
+python tools/optimize.py --iters 15000 --seeds 3 --margin 10 --tag v3
+```
+
+Подбор базового плана и ответа на стресс вместе: случайный локальный поиск с
+отжигом, целевая функция — PV в стандартном сценарии плюс PV в стрессе с ответом,
+штрафы за нарушения, дефицит и резерв ниже 45 дней плюс запас `--margin`.
+Три стратегии инвестиций (`full`, `earth`, `lunar`), фиксированный seed, итог в
+`results/optimize_summary.json` и планах `results/plans/<tag>-<стратегия>[-response].json`.
+
 ## Как устроен расчёт
 
 Вход: данные кейса (`data/*.csv`), сценарий (`configs/scenarios/*.yaml`) и

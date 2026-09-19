@@ -1,0 +1,136 @@
+[
+  {
+    "strategy": "full",
+    "label": "Earth-New + Lunar-ISRU + ZBO",
+    "base_plan": "v3-full",
+    "response_plan": "v3-full-response",
+    "base_pv": 9288.560601,
+    "base_feasible": true,
+    "base_violations": "нет",
+    "stress_no_response_pv": 9491.096303,
+    "stress_no_response_feasible": false,
+    "stress_no_response_shortage": 157.307,
+    "stress_no_response_violations": "RESERVE_45D 2039; RESERVE_45D 2040",
+    "stress_response_pv": 10721.45702,
+    "stress_response_feasible": true,
+    "stress_response_shortage": 0.0,
+    "stress_response_violations": "нет",
+    "response_changes": {
+      "order B 2039": [
+        0.0,
+        95.0
+      ],
+      "res B 2039": [
+        0.0,
+        95.0
+      ],
+      "res E 2039": [
+        0.0,
+        5.0
+      ],
+      "res B 2040": [
+        0.0,
+        65.0
+      ],
+      "order B 2040": [
+        0.0,
+        65.0
+      ]
+    },
+    "capex": 1790.0,
+    "seed": 2035,
+    "iters": 15000
+  },
+  {
+    "strategy": "earth",
+    "label": "Earth-New + ZBO, без Луны",
+    "base_plan": "v3-earth",
+    "response_plan": "v3-earth-response",
+    "base_pv": 8643.484507,
+    "base_feasible": true,
+    "base_violations": "нет",
+    "stress_no_response_pv": 9056.827479,
+    "stress_no_response_feasible": false,
+    "stress_no_response_shortage": 140.595,
+    "stress_no_response_violations": "RESERVE_45D 2040",
+    "stress_response_pv": 10202.277442,
+    "stress_response_feasible": true,
+    "stress_response_shortage": 0.0,
+    "stress_response_violations": "нет",
+    "response_changes": {
+      "order B 2039": [
+        5.0,
+        75.0
+      ],
+      "res B 2039": [
+        10.0,
+        85.0
+      ],
+      "res E 2039": [
+        0.0,
+        15.0
+      ],
+      "order E 2039": [
+        0.0,
+        15.0
+      ],
+      "res B 2040": [
+        10.0,
+        85.0
+      ],
+      "order B 2040": [
+        10.0,
+        70.0
+      ]
+    },
+    "capex": 540.0,
+    "seed": 2035,
+    "iters": 15000
+  },
+  {
+    "strategy": "lunar",
+    "label": "Lunar-ISRU + ZBO, без Earth-New",
+    "base_plan": "v3-lunar",
+    "response_plan": "v3-lunar-response",
+    "base_pv": 8683.5921,
+    "base_feasible": true,
+    "base_violations": "нет",
+    "stress_no_response_pv": 8917.33516,
+    "stress_no_response_feasible": false,
+    "stress_no_response_shortage": 203.25,
+    "stress_no_response_violations": "RESERVE_45D 2039; RESERVE_45D 2040",
+    "stress_response_pv": 10638.000231,
+    "stress_response_feasible": true,
+    "stress_response_shortage": 0.0,
+    "stress_response_violations": "нет",
+    "response_changes": {
+      "order B 2039": [
+        0.0,
+        60.0
+      ],
+      "res B 2039": [
+        0.0,
+        70.0
+      ],
+      "order E 2039": [
+        0.0,
+        60.0
+      ],
+      "res E 2039": [
+        0.0,
+        60.0
+      ],
+      "order B 2040": [
+        0.0,
+        90.0
+      ],
+      "res B 2040": [
+        0.0,
+        90.0
+      ]
+    },
+    "capex": 1430.0,
+    "seed": 2035,
+    "iters": 15000
+  }
+]
