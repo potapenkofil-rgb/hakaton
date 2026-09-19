@@ -13,10 +13,28 @@
 | `configs/scenarios/` | сценарии организаторов `base.yaml`, `mandatory_stress.yaml`; свои сценарии — `team_*.yaml` | организаторские — никто, свои — команда |
 | `configs/schemas/` | JSON-схемы плана, выгрузки и данных от организаторов | никто |
 | `configs/assumptions.json` | допущения команды: название, значение, единица, источник, где применяется | команда |
+| `configs/risks.json` | реестр рисков рекомендуемого плана с мерами; оценка `tools/risks.py` | команда |
+| `data_ext/` | копии данных организаторов с добавками команды (`horizon_2041/`, `loss_2pct/`), каждая добавка помечена `TEAM_ASSUMPTION` | команда |
+| `app/static/` | интерфейс оператора, отдаётся сервером `python -m fuelhub serve` | фронтенд |
+| `tools/` | сравнение планов, чувствительность, риски, оптимизация, проверка ответа на стресс | бэкенд |
 | `src/fuelhub/` | расчётное ядро и CLI | бэкенд |
 | `tests/` | тесты; `tests/reference/` — контрольные примеры V01–V10 и невалидные планы от организаторов | тестирование |
 | `results/` | сохранённые планы (`plans/`), результаты и выгрузки по плану и сценарию | генерируется |
-| `docs/` | контракт данных `CONTRACT.md`, план работы `PLAN.md`, записка, презентация; `docs/organizer/` — правила расчёта и FAQ организаторов; `docs/case/` — постановка и критерии (PDF) | документы |
+| `docs/` | документы команды (список ниже); `docs/organizer/` — правила расчёта и FAQ организаторов; `docs/case/` — постановка и критерии (PDF) | документы |
+
+Документы команды в `docs/`:
+
+| Файл | О чём |
+|---|---|
+| `STRESS_RESPONSE.md` | выбор плана, ответ на обязательный стресс, сценарии спроса, чувствительность |
+| `RISKS.md` | реестр из восьми рисков с количественной оценкой, мерами и остатком |
+| `STAKEHOLDERS.md` | кто получает топливо, платит и несёт риск; как это меняется по рискам |
+| `ARCHITECTURE.md` | схема расчёта, формулы с источниками, дорожная карта решений и деньги по годам |
+| `TEST_PROTOCOL.md` | что и как проверяется, команды для воспроизведения всех чисел |
+| `METHODS_SOURCES.md` | какие методы из базы организаторов применены и где |
+| `CONTRACT.md` | формат плана и результата для интерфейса |
+| `UI_TEST.md` | проверка интерфейса руками за пять минут |
+| `PLAN.md` | план работы команды |
 
 Материалы организаторов взяты из https://github.com/SpaceEconomyPolicy/test_oil,
 коммит `cec6de1` от 2026-09-18.
@@ -69,7 +87,8 @@ python tools/compare_plans.py
 ```
 
 Все планы из `results/plans` в двух сценариях: статус, PV, дефицит, минимальный
-резерв, список нарушений. Пишет `results/comparison.csv`.
+резерв, список нарушений. Пишет `results/comparison.csv`. Другие планы и
+сценарии: `--plans v3-earth v3-full --scenarios BASE TEAM_HIGH_DEMAND`.
 
 ```bash
 python tools/check_response.py v3-earth v3-earth-response
@@ -97,6 +116,14 @@ python tools/optimize.py --iters 15000 --seeds 3 --margin 10 --tag v3
 Три стратегии инвестиций (`full`, `earth`, `lunar`), фиксированный seed, итог в
 `results/optimize_summary.json` и планах `results/plans/<tag>-<стратегия>[-response].json`.
 
+```bash
+python tools/risks.py
+```
+
+Реестр рисков из `configs/risks.json`: для каждого риска план без мер в сценарии
+риска, цена подготовки в базовом сценарии, остаток с мерами. Пишет
+`results/risks_assessment.json` и `.csv`; описание в `docs/RISKS.md`.
+
 ## Как устроен расчёт
 
 Вход: данные кейса (`data/*.csv`), сценарий (`configs/scenarios/*.yaml`) и
@@ -121,7 +148,8 @@ python tools/optimize.py --iters 15000 --seeds 3 --margin 10 --tag v3
    (мощность, бронь, ёмкость, доступность, финансирование ISRU). У каждой —
    правило, год, факт, порог, превышение, причина. `feasible = false`, если
    не пройдена хоть одна проверка со `severity: hard`; требования BASE к
-   сервису в других сценариях показываются как `info`.
+   сервису в других сценариях показываются как `info`, кроме сценариев команды
+   с полем `constraint_profile`, которые наследуют жёсткие правила своей базы.
 
 Формулы — в `src/fuelhub/rules.py`, они же проверяются контрольными
 примерами организаторов V01–V10 в `tests/test_reference.py`.
@@ -129,7 +157,17 @@ python tools/optimize.py --iters 15000 --seeds 3 --margin 10 --tag v3
 ## Порядок проверки (как у организаторов)
 
 1. установка и запуск: `pip install pytest`, `python -m pytest`;
-2. стандартный сценарий: `python -m fuelhub calc results/plans/base-v1.json`;
-3. обязательный стресс: то же с `--scenario MANDATORY_STRESS`;
-4. дополнительные тесты команды: `tests/`, сценарии `configs/scenarios/team_*.yaml`;
-5. сравнение и выгрузка: `compare`, `export`; готовые файлы — в `results/base-v1/`.
+2. стандартный сценарий: `python -m fuelhub calc results/plans/v3-earth.json`;
+3. обязательный стресс: то же с `--scenario MANDATORY_STRESS` (план один стресс
+   не проходит), ответ: `python -m fuelhub calc results/plans/v3-earth-response.json --scenario MANDATORY_STRESS`;
+4. дополнительные тесты команды: `tests/`, сценарии `configs/scenarios/team_*.yaml`,
+   реестр рисков `python tools/risks.py`;
+5. сравнение и выгрузка: `compare`, `export`; готовые файлы — в `results/v3-earth/`,
+   `results/v3-earth-response/` и `results/base-v1/`;
+6. расширение данных: `python -m fuelhub calc results/plans/v3-earth.json --data data_ext/horizon_2041`;
+7. интерфейс: `python -m fuelhub serve`, дальше по `docs/UI_TEST.md`.
+
+Границы прототипа: дефицит без цены, вероятности рисков не заявляются, поиск
+плана эвристический, горизонт и каналы расширяются данными, а не кодом
+(`data_ext/README.md`). Подробнее: `docs/TEST_PROTOCOL.md`, раздел 4, и
+`docs/STRESS_RESPONSE.md`, раздел 7.

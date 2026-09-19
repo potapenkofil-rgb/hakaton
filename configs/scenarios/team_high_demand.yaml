@@ -1,0 +1,8 @@
+scenario_id: TEAM_HIGH_DEMAND
+label_ru: "Высокий спрос организаторов (high_total_t)"
+status: TEAM_ASSUMPTION
+constraint_profile: BASE
+demand_profile: high
+notes:
+  - "Колонка high_total_t из data/demand.csv: плюс 10 % в 2035-2037 и плюс 25 % в 2038-2040."
+  - "Не смешивается с обязательным стрессом."

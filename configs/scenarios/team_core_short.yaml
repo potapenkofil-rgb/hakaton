@@ -1,0 +1,9 @@
+scenario_id: TEAM_CORE_SHORT
+label_ru: "Недопоставка Earth-Core в один год"
+status: TEAM_ASSUMPTION
+constraint_profile: BASE
+actual_delivery_share:
+  Earth-Core:
+    2039: 0.9
+notes:
+  - "Reliability 0.96 в данных не задаёт распределение отказов; берём интервальный сценарий: один плохой год с 10 % недопоставки основного канала."

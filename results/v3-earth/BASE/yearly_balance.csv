@@ -1,0 +1,7 @@
+year,scenario_id,demand_total_t,demand_critical_t,opening_stock_t,ordered_t,delivered_plan_t,delivered_actual_t,losses_t,loss_share,served_total_t,served_critical_t,shortage_total_t,shortage_critical_t,closing_stock_t,service_level_total,service_level_critical,reserve_required_t,reserve_days_at_start,reserve_equivalent_days,reserve_note,storage_id,storage_capacity_t,max_stock_t,overflow_t,emergency_base_channel,emergency_streak_years
+2035,BASE,100.0,80.0,15.0,115.0,115.0,115.0,5.175,0.045,100.0,80.0,0.0,0.0,24.825,1.0,1.0,12.328767,54.75,54.75,,BASE,70.0,24.825,0.0,0,0
+2036,BASE,140.0,105.0,24.825,180.0,180.0,180.0,8.1,0.045,140.0,105.0,0.0,0.0,56.725,1.0,1.0,17.260274,64.722321,64.722321,,BASE,70.0,56.725,0.0,0,0
+2037,BASE,190.0,135.0,56.725,190.0,190.0,190.0,2.28,0.012,190.0,135.0,0.0,0.0,54.445,1.0,1.0,23.424658,108.971711,108.971711,,ZBO,120.0,56.535,0.0,0,0
+2038,BASE,250.0,170.0,54.445,285.0,285.0,285.0,3.42,0.012,250.0,170.0,0.0,0.0,86.025,1.0,1.0,30.821918,79.4897,79.4897,,ZBO,120.0,86.025,0.0,0,0
+2039,BASE,320.0,210.0,86.025,305.0,305.0,305.0,3.66,0.012,320.0,210.0,0.0,0.0,67.365,1.0,1.0,39.452055,98.122266,98.122266,,ZBO,120.0,84.47,0.0,0,0
+2040,BASE,390.0,250.0,67.365,330.0,330.0,330.0,3.96,0.012,390.0,250.0,0.0,0.0,3.405,1.0,1.0,48.082192,63.046731,63.046731,,ZBO,120.0,62.035,0.0,0,0

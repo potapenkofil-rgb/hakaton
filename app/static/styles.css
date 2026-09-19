@@ -52,6 +52,8 @@ select:focus, input:focus { outline: 2px solid #c9d8f3; outline-offset: 0; borde
 .seg { display: inline-flex; border: 1px solid #d3d6dc; border-radius: 8px; padding: 3px; background: #fff; }
 .seg button { height: 26px; padding: 0 12px; border: 0; border-radius: 6px; background: transparent; cursor: pointer; color: var(--muted); }
 .seg button.on { background: var(--ink); color: #fff; }
+#scenario-team { height: 34px; max-width: 220px; color: var(--muted); }
+#scenario-team.on { color: var(--ink); border-color: var(--ink); }
 
 section { margin-top: 22px; scroll-margin-top: 20px; }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px; }

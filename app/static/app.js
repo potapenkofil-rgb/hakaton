@@ -218,7 +218,7 @@ function renderTables(res) {
 function render(res) {
   state.result = res;
   const hard = renderViolations(res);
-  setStatus(`${res.plan_id} · ${scenarioName(res.scenario_id).toLowerCase()} сценарий: ${res.feasible ? "план исполним" : `план не исполним, нарушений: ${hard}`}`, res.feasible ? "ok" : "bad");
+  setStatus(`${res.plan_id} · ${SHORT[res.scenario_id] ? `${scenarioName(res.scenario_id).toLowerCase()} сценарий` : `сценарий «${scenarioName(res.scenario_id)}»`}: ${res.feasible ? "план исполним" : `план не исполним, нарушений: ${hard}`}`, res.feasible ? "ok" : "bad");
   renderSummary(res);
   chartStock(res);
   chartDemand(res);
@@ -234,9 +234,15 @@ function yearOptions(sel, years, value) {
   sel.innerHTML = years.map((y) => `<option value="${y}" ${y === value ? "selected" : ""}>${y}</option>`).join("");
 }
 
+function isTeam(id) {
+  return id.startsWith("TEAM_");
+}
+
 function setScenario(id, recalc) {
   state.scenario = id;
   document.querySelectorAll("#scenario button").forEach((b) => b.classList.toggle("on", b.dataset.id === id));
+  $("scenario-team").value = isTeam(id) ? id : "";
+  $("scenario-team").classList.toggle("on", isTeam(id));
   if (recalc) calc();
 }
 
@@ -249,8 +255,14 @@ function buildEditor() {
   yearOptions($("zbo-year"), years, 2037);
   $("isru-years").innerHTML = years.map((y) => `<label><input type="checkbox" class="isru-year" value="${y}">${y}</label>`).join("");
   $("init-source").innerHTML = sources.map((s) => `<option value="${s.id}">${s.id} · ${esc(s.name)}, ${num(s.price, 2)} млн/т</option>`).join("");
-  $("scenario").innerHTML = scenarios.map((s) => `<button type="button" data-id="${s.scenario_id}" title="${esc(s.label)} (${s.scenario_id})">${scenarioName(s.scenario_id)}</button>`).join("");
+  const own = scenarios.filter((s) => !isTeam(s.scenario_id));
+  const team = scenarios.filter((s) => isTeam(s.scenario_id));
+  $("scenario").innerHTML = own.map((s) => `<button type="button" data-id="${s.scenario_id}" title="${esc(s.label)} (${s.scenario_id})">${scenarioName(s.scenario_id)}</button>`).join("");
   $("scenario").addEventListener("click", (e) => { if (e.target.dataset.id) setScenario(e.target.dataset.id, true); });
+  const sel = $("scenario-team");
+  sel.classList.toggle("hidden", !team.length);
+  sel.innerHTML = `<option value="">Сценарий команды…</option>` + team.map((s) => `<option value="${s.scenario_id}">${esc(s.label)}</option>`).join("");
+  sel.addEventListener("change", () => { if (sel.value) setScenario(sel.value, true); });
   setScenario(scenarios.some((s) => s.scenario_id === "BASE") ? "BASE" : scenarios[0].scenario_id);
   const plan = $("plan");
   plan.addEventListener("input", () => setStatus("План изменён, нажмите «Посчитать»", "wait"));
@@ -434,8 +446,9 @@ async function init() {
     state.inputs = await api("/api/inputs");
   } catch (e) { showError(e); return; }
   buildEditor();
-  renderPlanList(state.inputs.plans, "base-v1");
-  if (state.inputs.plans.some((p) => p.plan_id === "base-v1")) await openPlan();
+  const first = ["v3-earth", "base-v1"].find((id) => state.inputs.plans.some((p) => p.plan_id === id));
+  renderPlanList(state.inputs.plans, first);
+  if (first) await openPlan();
   else setStatus("Выберите план или загрузите JSON", "wait");
 }
 

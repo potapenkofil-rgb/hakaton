@@ -1,0 +1,10 @@
+scenario_id: TEAM_EARTH_NEW_DELAY
+label_ru: "Задержка ввода Earth-New на год"
+status: TEAM_ASSUMPTION
+constraint_profile: BASE
+actual_delivery_share:
+  Earth-New:
+    2038: 0.0
+notes:
+  - "Правило ввода 18-24 месяца после исполнения опциона; план уже берёт 24. Сценарий: ввод сдвигается ещё на год, поставок 2038 нет, с 2039 канал работает."
+  - "Брони и take-or-pay за 2038 при этом не платятся: канал не введён (см. допущение в docs/RISKS.md)."

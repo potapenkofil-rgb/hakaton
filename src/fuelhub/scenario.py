@@ -104,6 +104,10 @@ class Scenario:
     loss_ceiling: LossCeiling
     notes: tuple[str, ...] = ()
     path: str = ""
+    constraint_profile: str = ""
+
+    def rules_of(self) -> str:
+        return self.constraint_profile or self.id
 
     def demand(self, case: CaseData, year: int) -> tuple[float, float]:
         d = case.demand[year]
@@ -140,6 +144,7 @@ class Scenario:
             "variable_price_multiplier": {s: {str(k): v for k, v in m.items() if v != 1.0} for s, m in self.price_mult.items()},
             "actual_delivery_share": {s: {str(k): v for k, v in m.items()} for s, m in self.delivery_share.items()},
             "loss_ceiling": self.loss_ceiling.__dict__,
+            "constraint_profile": self.rules_of(),
         }
 
 
@@ -191,6 +196,7 @@ def scenario_from_dict(raw: dict, case: CaseData, path: str = "") -> Scenario:
                                  float(lc.get("max_losses_divided_by_throughput", 1.0) or 1.0)),
         notes=tuple(str(n) for n in (raw.get("notes") or [])),
         path=path,
+        constraint_profile=str(raw.get("constraint_profile") or ""),
     )
 
 

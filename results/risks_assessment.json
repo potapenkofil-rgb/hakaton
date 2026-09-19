@@ -1,0 +1,48 @@
+[
+  {
+    "id": "R8",
+    "title": "Спрос ниже прогноза: переполнение и take-or-pay",
+    "plan_id": "v3-earth",
+    "scenario_id": "TEAM_LOW_DEMAND",
+    "base_scenario": "BASE",
+    "data_dir": "data",
+    "baseline": {
+      "feasible": true,
+      "pv": 8643.5,
+      "total": 10732.0,
+      "shortage": 0.0,
+      "min_reserve": 54.8,
+      "losses": 26.6,
+      "top_up": 0.0,
+      "overflow": 0.0,
+      "violations": ""
+    },
+    "hit": {
+      "feasible": false,
+      "pv": 8984.2,
+      "total": 11184.9,
+      "shortage": 0.0,
+      "min_reserve": 68.4,
+      "losses": 26.6,
+      "top_up": 0.0,
+      "overflow": 466.0,
+      "violations": "STORAGE_CAPACITY 2036; STORAGE_CAPACITY 2037; STORAGE_CAPACITY 2038; STORAGE_CAPACITY 2039; STORAGE_CAPACITY 2040"
+    },
+    "measure": "Снизить заказы Core и Earth-New с 2037 под фактический спрос, брони оставить",
+    "measure_cost_pv": 0.0,
+    "prepared_feasible": true,
+    "after": {
+      "feasible": true,
+      "pv": 7096.4,
+      "total": 8761.5,
+      "shortage": 0.0,
+      "min_reserve": 54.5,
+      "losses": 21.7,
+      "top_up": 0.0,
+      "overflow": 0.0,
+      "violations": ""
+    },
+    "effect_pv": 340.7,
+    "after_pv_delta": -1547.1
+  }
+]

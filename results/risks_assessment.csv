@@ -1,0 +1,2 @@
+id,title,scenario_id,data_dir,baseline_pv,hit_feasible,hit_pv,effect_pv,hit_shortage_t,hit_min_reserve_days,hit_violations,measure,measure_cost_pv,after_feasible,after_pv,after_shortage_t,after_min_reserve_days,after_violations
+R8,Спрос ниже прогноза: переполнение и take-or-pay,TEAM_LOW_DEMAND,data,8643.5,False,8984.2,340.7,0.0,68.4,STORAGE_CAPACITY 2036; STORAGE_CAPACITY 2037; STORAGE_CAPACITY 2038; STORAGE_CAPACITY 2039; STORAGE_CAPACITY 2040,"Снизить заказы Core и Earth-New с 2037 под фактический спрос, брони оставить",0.0,True,7096.4,0.0,54.5,

@@ -3,7 +3,7 @@ import shutil
 
 import pytest
 
-from fuelhub import DATA_DIR, load_case, load_scenarios, parse_yaml, scenario_from_dict
+from fuelhub import DATA_DIR, ROOT, load_case, load_scenarios, parse_yaml, scenario_from_dict
 from fuelhub.cli import Context
 
 from conftest import failed, make_plan, run, year_row
@@ -72,3 +72,27 @@ def test_organizer_limits_still_apply_in_extension(tmp_path, assumptions):
     res = run(case, sc, assumptions, plan)
     assert failed(res, "CAPACITY_EXCEEDED")[0]["excess"] == 1
     assert {c["rule_id"] for c in res["constraint_checks"]} >= {"CAPEX_2037", "CAPEX_2040", "RESERVE_45D"}
+
+
+def test_repo_copy_horizon_2041():
+    ctx = Context(ROOT / "data_ext" / "horizon_2041")
+    assert ctx.case.years[-1] == 2041 and "X" in ctx.case.sources
+    assert ctx.case.data_hash != load_case().data_hash
+    rows = list(csv.DictReader((ROOT / "data_ext" / "horizon_2041" / "supply_sources.csv").open(encoding="utf-8")))
+    assert [r["status"] for r in rows if r["source_id"] == "X"] == ["TEAM_ASSUMPTION"]
+    res = ctx.run(ctx.plan(ROOT / "results" / "plans" / "v3-earth.json"), "BASE")
+    assert len(res["yearly_balance"]) == 7
+    assert year_row(res, "yearly_balance", 2041)["demand_total_t"] == 450
+    assert any(c["rule_id"] == "RESERVE_45D" and c["year"] == 2041 for c in res["constraint_checks"])
+    assert any(c["rule_id"] == "CAPEX_2040" for c in res["constraint_checks"])
+
+
+def test_repo_copy_loss_2pct():
+    ctx = Context(ROOT / "data_ext" / "loss_2pct")
+    assert ctx.case.storages["ZBO"].loss_rate == pytest.approx(0.02)
+    plan = ROOT / "results" / "plans" / "v3-earth-response.json"
+    loose = ctx.run(ctx.plan(plan), "MANDATORY_STRESS")
+    tight = Context().run(Context().plan(plan), "MANDATORY_STRESS")
+    assert loose["totals"]["losses_t"] > tight["totals"]["losses_t"]
+    limits = [c for c in loose["constraint_checks"] if c["rule_id"] == "STRESS_LOSS_LIMIT"]
+    assert limits and all(c["ok"] for c in limits)

@@ -386,7 +386,7 @@ class Engine:
         by_year = {r["year"]: r for r in yearly}
         fin = {r["year"]: r for r in finance}
         for c in self.case.constraints:
-            applies = c.scenario in ("ALL", scenario.id)
+            applies = c.scenario in ("ALL", scenario.id, scenario.rules_of())
             severity = c.severity if applies else "info"
             if c.metric == "critical_service_level":
                 for y in self.years:

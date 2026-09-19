@@ -105,7 +105,7 @@ def test_cli_inputs(capsys):
     payload = json.loads(capsys.readouterr().out)
     assert [s["id"] for s in payload["sources"]] == ["A", "B", "C", "D", "E"]
     assert payload["sources"][4]["lead_time_months"] == pytest.approx(6 / (52 / 12))
-    assert {s["scenario_id"] for s in payload["scenarios"]} == {"BASE", "MANDATORY_STRESS"}
+    assert {s["scenario_id"] for s in payload["scenarios"]} >= {"BASE", "MANDATORY_STRESS"}
 
 
 def test_cli_invalid_plan_exit_2(tmp_path, capsys):

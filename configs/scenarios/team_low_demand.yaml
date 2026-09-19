@@ -1,0 +1,9 @@
+scenario_id: TEAM_LOW_DEMAND
+label_ru: "Низкий спрос организаторов (low_total_t)"
+status: TEAM_ASSUMPTION
+constraint_profile: BASE
+demand_profile: low
+notes:
+  - "Колонка low_total_t из data/demand.csv: минус 20 % к базовому спросу каждый год."
+  - "Критический спрос берётся в той же доле от общего, что и в базе."
+  - "Готовая контрольная точка чувствительности по STRESS_PROTOCOL.md; проверяет переполнение бака и take-or-pay."

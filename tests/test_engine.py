@@ -496,3 +496,13 @@ def test_low_and_high_demand_scenarios(case, scenarios, assumptions, base_plan_d
     assert rl["totals"]["shortage_total_t"] == 0
     assert rh["totals"]["shortage_total_t"] > 0
     assert year_row(rh, "yearly_balance", 2038)["demand_critical_t"] == pytest.approx(312.5 * 170 / 250)
+
+
+def test_constraint_profile_makes_base_rules_hard(case, scenarios, assumptions):
+    plan = make_plan(orders={"A": {y: 100 for y in case.years}}, reservations={"A": {y: 100 for y in case.years}})
+    low = run(case, scenarios, assumptions, plan, "TEAM_LOW_DEMAND")
+    svc = [c for c in low["constraint_checks"] if c["rule_id"] == "BASE_TOTAL_SERVICE"]
+    assert svc and all(c["severity"] == "hard" for c in svc)
+    squeeze = run(case, scenarios, assumptions, plan, "TEAM_FLEX_SQUEEZE")
+    assert all(c["severity"] == "info" for c in squeeze["constraint_checks"] if c["rule_id"].startswith("BASE_"))
+    assert any(c["rule_id"] == "STRESS_LOSS_LIMIT" and c["severity"] == "hard" for c in squeeze["constraint_checks"])

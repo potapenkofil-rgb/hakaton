@@ -1,0 +1,35 @@
+scenario_id: TEAM_FLEX_SQUEEZE
+label_ru: "Обязательный стресс плюс дефицит гибкой мощности"
+status: TEAM_ASSUMPTION
+constraint_profile: MANDATORY_STRESS
+demand_multiplier:
+  2038: 1.15
+  2039: 1.15
+  2040: 1.15
+critical_demand_multiplier:
+  2038: 1.15
+  2039: 1.15
+  2040: 1.15
+variable_price_multiplier:
+  Earth-Core:
+    2038: 1.25
+    2039: 1.25
+  Earth-Flex:
+    2038: 1.25
+    2039: 1.25
+actual_delivery_share:
+  Lunar-ISRU:
+    2038: 0.55
+    2039: 0.75
+    2040: 1.0
+  Earth-Flex:
+    2039: 0.8
+    2040: 0.8
+loss_ceiling:
+  enabled: true
+  from_year: 2038
+  max_losses_divided_by_throughput: 0.02
+notes:
+  - "Комбинированный шок, задан явно: все параметры MANDATORY_STRESS плюс Earth-Flex привозит 80 % заказа в 2039-2040."
+  - "Основание: в стрессе на гибкую мощность претендуют все операторы; 80 % - граница, найденная анализом чувствительности ответа v3-earth-response."
+  - "Правило комбинации: шоки применяются одновременно, без повторного учёта reliability."

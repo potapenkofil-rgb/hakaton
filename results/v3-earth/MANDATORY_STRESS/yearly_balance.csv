@@ -1,0 +1,7 @@
+year,scenario_id,demand_total_t,demand_critical_t,opening_stock_t,ordered_t,delivered_plan_t,delivered_actual_t,losses_t,loss_share,served_total_t,served_critical_t,shortage_total_t,shortage_critical_t,closing_stock_t,service_level_total,service_level_critical,reserve_required_t,reserve_days_at_start,reserve_equivalent_days,reserve_note,storage_id,storage_capacity_t,max_stock_t,overflow_t,emergency_base_channel,emergency_streak_years
+2035,MANDATORY_STRESS,100.0,80.0,15.0,115.0,115.0,115.0,5.175,0.045,100.0,80.0,0.0,0.0,24.825,1.0,1.0,12.328767,54.75,54.75,,BASE,70.0,24.825,0.0,0,0
+2036,MANDATORY_STRESS,140.0,105.0,24.825,180.0,180.0,180.0,8.1,0.045,140.0,105.0,0.0,0.0,56.725,1.0,1.0,17.260274,64.722321,64.722321,,BASE,70.0,56.725,0.0,0,0
+2037,MANDATORY_STRESS,190.0,135.0,56.725,190.0,190.0,190.0,2.28,0.012,190.0,135.0,0.0,0.0,54.445,1.0,1.0,23.424658,108.971711,108.971711,,ZBO,120.0,56.535,0.0,0,0
+2038,MANDATORY_STRESS,287.5,195.5,54.445,285.0,285.0,285.0,3.42,0.012,287.5,195.5,0.0,0.0,48.525,1.0,1.0,35.445205,69.121478,69.121478,,ZBO,120.0,53.951667,0.0,0,0
+2039,MANDATORY_STRESS,368.0,241.5,48.525,305.0,305.0,305.0,3.66,0.012,349.865,241.5,18.135,0.0,0.0,0.95072,1.0,45.369863,48.129416,48.129416,,ZBO,120.0,42.97,0.0,0,0
+2040,MANDATORY_STRESS,448.5,287.5,0.0,330.0,330.0,330.0,3.96,0.012,326.04,287.5,122.46,0.0,0.0,0.726957,1.0,55.294521,0.0,0.0,,ZBO,120.0,0.0,0.0,0,0

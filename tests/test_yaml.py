@@ -5,9 +5,22 @@ from fuelhub.scenario import load_scenario
 
 
 def test_organizer_files_parse(case, scenarios):
-    assert set(scenarios) == {"BASE", "MANDATORY_STRESS"}
+    assert {"BASE", "MANDATORY_STRESS"} <= set(scenarios)
     assert scenarios["BASE"].status == "CASE_INPUT"
     assert scenarios["MANDATORY_STRESS"].label == "Обязательный стрессовый сценарий"
+    assert all(s.startswith("TEAM_") for s in scenarios if s not in ("BASE", "MANDATORY_STRESS"))
+
+
+def test_team_scenarios_marked_and_profiled(scenarios):
+    team = {k: v for k, v in scenarios.items() if k.startswith("TEAM_")}
+    assert len(team) >= 6
+    for s in team.values():
+        assert s.status == "TEAM_ASSUMPTION"
+        assert s.constraint_profile in ("BASE", "MANDATORY_STRESS")
+        assert s.notes
+    assert scenarios["BASE"].rules_of() == "BASE"
+    assert scenarios["TEAM_FLEX_SQUEEZE"].rules_of() == "MANDATORY_STRESS"
+    assert scenarios["TEAM_LOW_DEMAND"].demand_profile == "low"
 
 
 def test_stress_multipliers_exact(case, scenarios):

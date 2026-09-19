@@ -1,0 +1,24 @@
+scenario_id: TEAM_GEO_PRICE
+label_ru: "Геополитический рост цен земных каналов"
+status: TEAM_ASSUMPTION
+constraint_profile: BASE
+variable_price_multiplier:
+  Earth-Core:
+    2038: 1.5
+    2039: 1.5
+    2040: 1.5
+  Earth-Flex:
+    2038: 1.5
+    2039: 1.5
+    2040: 1.5
+  Earth-New:
+    2038: 1.3
+    2039: 1.3
+    2040: 1.3
+  Emergency:
+    2038: 1.3
+    2039: 1.3
+    2040: 1.3
+notes:
+  - "Диапазон: обязательный стресс задаёт +25 % на два года; здесь +50 % на три года для каналов с рыночной ценой и +30 % для Earth-New и Emergency как верхняя граница."
+  - "Брони, take-or-pay и CAPEX не меняются, как в обязательном стрессе."
